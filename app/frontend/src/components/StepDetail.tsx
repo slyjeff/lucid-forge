@@ -56,7 +56,7 @@ export function StepDetail({ step, featureId }: StepDetailProps) {
       <TabBar tabs={subTabs} activeTab={subTab} onTabChange={setSubTab} />
 
       {/* Sub-tab content */}
-      <div style={{ flex: 1, overflow: "auto" }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: subTab === "diff" ? "hidden" : "auto" }}>
         {subTab === "insights" && <InsightsPanel step={step} />}
         {subTab === "diff" && <DiffTab step={step} featureId={featureId} />}
         {subTab === "map" && <ChangeMapView step={step} />}

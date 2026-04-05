@@ -110,7 +110,9 @@ export function FeatureReviewPage() {
       <TabBar tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab Content */}
-      <div style={{ flex: 1, overflow: "auto" }}>{renderTabContent()}</div>
+      <div style={{ flex: 1, minHeight: 0, overflow: activeTab === "steps" ? "hidden" : "auto" }}>
+        {renderTabContent()}
+      </div>
     </div>
   );
 }

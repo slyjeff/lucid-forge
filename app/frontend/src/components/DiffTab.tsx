@@ -109,7 +109,7 @@ export function DiffTab({ step, featureId }: DiffTabProps) {
         )}
 
         {/* Monaco diff */}
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
           {loading ? (
             <div
               style={{
@@ -125,6 +125,8 @@ export function DiffTab({ step, featureId }: DiffTabProps) {
               newContent={diff.newContent}
               filePath={selectedFile}
               mode={diffMode}
+              isNew={diff.isNew}
+              isDeleted={diff.isDeleted}
             />
           ) : (
             <div

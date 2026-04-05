@@ -36,7 +36,7 @@ export function StepsTab({ featureId }: StepsTabProps) {
         selectedOrder={step.order}
         onSelect={setSelectedStep}
       />
-      <div style={{ flex: 1, overflow: "auto" }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
         <StepDetail step={step} featureId={featureId} />
       </div>
     </div>
