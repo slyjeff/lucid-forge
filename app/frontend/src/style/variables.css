@@ -1,0 +1,94 @@
+:root {
+  /* Brand Accent (Warm Gold) */
+  --accent: #D4A843;
+  --accent-light: #E8C46B;
+  --accent-dark: #A88535;
+  --accent-subtle: rgba(212, 168, 67, 0.10);
+
+  /* Surfaces (Layered Depth) */
+  --bg: #0F1117;
+  --surface: #171B24;
+  --card: #1C2029;
+  --card-hover: #242935;
+  --elevated: #272C38;
+
+  /* Borders */
+  --border: #2D3340;
+  --border-light: #3B4354;
+
+  /* Text */
+  --text-primary: #E6EDF3;
+  --text-secondary: #8B949E;
+  --text-dim: #6E7681;
+
+  /* Status */
+  --success: #3FB950;
+  --success-subtle: rgba(63, 185, 80, 0.10);
+  --error: #F85149;
+  --error-subtle: rgba(248, 81, 73, 0.10);
+  --warning: #D29922;
+  --warning-subtle: rgba(210, 153, 34, 0.10);
+  --info: #58A6FF;
+  --info-subtle: rgba(88, 166, 255, 0.10);
+
+  /* Typography */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Fira Code", "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
+
+  --title-lg: 26px;
+  --title: 18px;
+  --body: 14px;
+  --label: 12px;
+  --code: 13px;
+  --badge: 8px;
+
+  --weight-normal: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Spacing (4px base) */
+  --space-xs: 2px;
+  --space-sm: 4px;
+  --space-md: 8px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 28px;
+
+  /* Corner Radius */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+
+  /* Diff */
+  --diff-added-bg: rgba(63, 185, 80, 0.12);
+  --diff-removed-bg: rgba(248, 81, 73, 0.12);
+  --diff-modified-bg: rgba(210, 153, 34, 0.12);
+  --diff-added-focus: rgba(63, 185, 80, 0.31);
+  --diff-removed-focus: rgba(248, 81, 73, 0.31);
+  --diff-modified-focus: rgba(210, 153, 34, 0.31);
+
+  /* Diff file headers */
+  --diff-header-new: rgba(63, 185, 80, 0.19);
+  --diff-header-deleted: rgba(248, 81, 73, 0.19);
+
+  /* Change map */
+  --map-added-tint: rgba(63, 185, 80, 0.30);
+  --map-modified-tint: rgba(210, 153, 34, 0.30);
+  --map-unchanged-tint: rgba(72, 79, 88, 0.30);
+  --map-group-border: rgba(255, 255, 255, 0.16);
+
+  /* Workflow phases */
+  --phase-completed: #1A6B37;
+  --phase-active: #B8941F;
+  --phase-pending-bg: #252A35;
+  --phase-pending-text: #5C6370;
+
+  /* Dialog */
+  --overlay: rgba(0, 0, 0, 0.69);
+
+  /* Transitions */
+  --transition-card: background-color 150ms ease;
+}
