@@ -101,9 +101,6 @@ export function FeatureReviewPage() {
         >
           {feature.name}
         </span>
-        <span style={{ fontSize: "var(--label)", color: "var(--text-dim)" }}>
-          ${feature.usage?.totalCostUsd?.toFixed(2) ?? "0.00"}
-        </span>
       </div>
 
       {/* Tab Bar */}

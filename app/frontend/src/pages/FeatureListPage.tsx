@@ -87,7 +87,6 @@ function FeatureCard({ feature }: { feature: Feature }) {
         }}
       >
         <span>{feature.stepCount} steps</span>
-        <span>${feature.usage?.totalCostUsd?.toFixed(2) ?? "0.00"}</span>
       </div>
     </div>
   );

@@ -153,37 +153,6 @@ export function InsightsPanel({ step }: InsightsPanelProps) {
         </div>
       </div>
 
-      {/* Usage */}
-      <div>
-        <h3
-          style={{
-            fontWeight: "var(--weight-semibold)",
-            marginBottom: "var(--space-md)",
-            color: "var(--text-secondary)",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-            fontSize: "var(--label)",
-          }}
-        >
-          Usage
-        </h3>
-        <div
-          style={{
-            display: "flex",
-            gap: "var(--space-xl)",
-            fontSize: "var(--label)",
-            color: "var(--text-dim)",
-          }}
-        >
-          <span>
-            In: {(step.usage?.inputTokens ?? 0).toLocaleString()}
-          </span>
-          <span>
-            Out: {(step.usage?.outputTokens ?? 0).toLocaleString()}
-          </span>
-          <span>${(step.usage?.costUsd ?? 0).toFixed(2)}</span>
-        </div>
-      </div>
     </div>
   );
 }
