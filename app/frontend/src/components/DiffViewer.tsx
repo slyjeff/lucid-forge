@@ -81,13 +81,25 @@ function decorateAllLines(
   editor.createDecorationsCollection(decorations);
 }
 
+function revealChange(ed: editor.IStandaloneDiffEditor, change: editor.ILineChange) {
+  const startLine = Math.max((change.modifiedStartLineNumber || 1) - 2, 1);
+  const endLine = (change.modifiedEndLineNumber || change.modifiedStartLineNumber || 1) + 2;
+  // Get the modified editor to reveal the range
+  const modifiedEditor = ed.getModifiedEditor();
+  modifiedEditor.revealRangeInCenter({
+    startLineNumber: startLine,
+    startColumn: 1,
+    endLineNumber: endLine,
+    endColumn: 1,
+  });
+}
+
 function scrollToFirstChange(ed: editor.IStandaloneDiffEditor, changeIndexRef: React.MutableRefObject<number>) {
   const tryScroll = () => {
     const changes = ed.getLineChanges();
     if (changes && changes.length > 0) {
       changeIndexRef.current = 0;
-      const line = Math.max((changes[0].modifiedStartLineNumber || 1) - 3, 1);
-      ed.revealLineNearTop(line);
+      revealChange(ed, changes[0]);
     } else {
       setTimeout(tryScroll, 20);
     }
@@ -108,9 +120,7 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
         const changes = ed.getLineChanges();
         if (!changes || changes.length === 0) return;
         changeIndexRef.current = Math.min(changeIndexRef.current + 1, changes.length - 1);
-        const change = changes[changeIndexRef.current];
-        const line = Math.max((change.modifiedStartLineNumber || 1) - 3, 1);
-        ed.revealLineNearTop(line);
+        revealChange(ed, changes[changeIndexRef.current]);
       },
       goToPrevChange: () => {
         const ed = diffEditorRef.current;
@@ -118,9 +128,7 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
         const changes = ed.getLineChanges();
         if (!changes || changes.length === 0) return;
         changeIndexRef.current = Math.max(changeIndexRef.current - 1, 0);
-        const change = changes[changeIndexRef.current];
-        const line = Math.max((change.modifiedStartLineNumber || 1) - 3, 1);
-        ed.revealLineNearTop(line);
+        revealChange(ed, changes[changeIndexRef.current]);
       },
     }));
 
