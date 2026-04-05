@@ -1,131 +1,154 @@
 # LucidForge
 
-Structured AI code generation with step-by-step review. LucidForge breaks feature development into phases — discovery, planning, execution, and code review — then gives you a rich review experience with diffs, change maps, per-file reasoning, and design pattern identification.
+Structured AI code generation with step-by-step review. LucidForge breaks feature development into phases — discovery, planning, execution, code review, and documentation — then gives you a rich review experience with diffs, change maps, per-file reasoning, and design pattern identification.
 
 Two components work together:
 
 1. **Claude Code skills** orchestrate the development workflow and write structured artifact files
-2. **Review apps** (desktop, VS Code, JetBrains) read those artifacts and present them for human review
+2. **Desktop app** reads those artifacts and presents diffs, change maps, and insights for human review
 
-## How It Works
+## Quick Start
 
-```
-You ──► /lucidforge "add user auth" ──► Claude Code executes steps ──► .lucidforge/ artifacts
-                                                                              │
-                                                                              ▼
-                                                                    Open LucidForge app
-                                                                    Review diffs & maps
-                                                                    Approve → commit
+### 1. Install the skills
+
+```bash
+./install.sh
 ```
 
-1. **Set up agents** — Run `/lucidforge-agents` in Claude Code to generate specialized agents for your project
-2. **Run a feature** — Run `/lucidforge "feature name" -p "description"` to start the workflow
-3. **Review** — Open the LucidForge app to review discovery docs, UX designs, plans, step-by-step diffs, change maps, and code review issues
-4. **Approve** — Approve the feature in the app to create a single commit on your source branch
+This copies the LucidForge skills to `~/.claude/skills/` so they're available in all projects.
+
+### 2. Generate agents for your project
+
+Open Claude Code in your project directory and run:
+
+```
+/lucidforge-agents
+```
+
+This scans your project and creates specialized agents (e.g., "Backend API", "Frontend", "Data Layer") in `.claude/agents/`. Each agent owns specific directories and accumulates learnings over time.
+
+### 3. Run a feature
+
+```
+/lucidforge "add-user-auth" -p "Add JWT-based authentication with login and register endpoints"
+```
+
+LucidForge walks through six phases:
+
+| Phase | What happens |
+|---|---|
+| **Discovery** | Explores codebase, asks clarifying questions, writes feature spec |
+| **UX Design** | Designs user flows and creates HTML mockups (optional, UI features only) |
+| **Planning** | Breaks feature into steps, assigns agents, predicts file changes |
+| **Execution** | Spawns agents step by step, validates (build + test) after each |
+| **Code Review** | Reviews generated code, auto-fixes issues |
+| **Documentation** | Updates project docs to reflect changes (if applicable) |
+
+Each phase writes artifact files to `.lucidforge/features/{feature-id}/`.
+
+**Flags:**
+- `-p "..."` — feature description (skips the "what do you want to build?" question)
+- `--auto-approve` — skip interactive approval gates
+- `--skip-ux` — skip UX design phase
+
+### 4. Review changes
+
+**Option A: Desktop app**
+
+```bash
+cd app
+wails build
+./build/bin/lucidforge.exe
+```
+
+The app shows:
+- **Discovery** — what was asked for, requirements, technical approach
+- **Plan** — step-by-step breakdown with agent assignments and file predictions
+- **UX Design** — user flows, component specs, HTML mockups you can open in a browser
+- **AI Review Notes** — issues found during code review and what was auto-fixed
+- **Review** — per-step diffs with syntax highlighting, change navigation, per-file reasoning, and an interactive change map showing how files connect
+
+You can edit files directly in the diff viewer — changes auto-save to disk. Mark files as reviewed to track your progress. Use side-by-side or unified diff mode, toggle whitespace visibility, and search within files.
+
+The app auto-refreshes when artifact files change, so you can have it open while a feature is still executing.
+
+**Option B: Read the files directly**
+
+Everything is in `.lucidforge/features/{feature-id}/` as human-readable JSON and markdown. You can inspect them with any text editor.
+
+### 5. Commit the feature
+
+**From the app:** Click the ✔ button next to the feature on the main screen. Enter a commit message. All changed files are staged and committed.
+
+**From Claude Code:**
+
+```
+/lucidforge-commit
+```
+
+This finds features ready for review, shows you a proposed commit message, and creates a single commit with all the feature's changes. It does not push.
 
 ## Install
 
-### Skills (required)
-
-The skills need to be in your Claude Code skills directory. Install globally (all projects) or per-project:
-
-**Option A: Run the install script**
+### Skills
 
 ```bash
-# Global install (recommended)
+# Global install (all projects)
 ./install.sh
 
 # Per-project install
 ./install.sh --project /path/to/your/project
 ```
 
-**Option B: Copy manually**
+Or copy manually:
 
 ```bash
-# Global
 cp -r skill/lucidforge ~/.claude/skills/
 cp -r skill/lucidforge-agents ~/.claude/skills/
-
-# Per-project
-cp -r skill/lucidforge /path/to/project/.claude/skills/
-cp -r skill/lucidforge-agents /path/to/project/.claude/skills/
+cp -r skill/lucidforge-commit ~/.claude/skills/
 ```
 
 ### Desktop App
 
+Requires [Go](https://go.dev/dl/) and [Wails v2](https://wails.io/):
+
 ```bash
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
 cd app
 wails build
 ```
 
-The built binary is in `app/build/bin/`. Run it from your project directory or pass the project path as an argument.
+The built binary is in `app/build/bin/`.
 
-## Usage
+## Skills Reference
 
-### 1. Generate Agents
+| Skill | Command | Purpose |
+|---|---|---|
+| `lucidforge` | `/lucidforge "name" -p "description"` | Orchestrate a full feature |
+| `lucidforge-agents` | `/lucidforge-agents` | Generate or refresh project agents |
+| `lucidforge-commit` | `/lucidforge-commit [feature-id]` | Commit a completed feature |
 
-Open Claude Code in your project and run:
+## Managing Agents
 
-```
-/lucidforge-agents
-```
+Agents are standard Claude Code agent files in `.claude/agents/` with `lucidforge: true` in their frontmatter. You can manage them:
 
-This scans your project structure and creates specialized agent files in `.claude/agents/` with `lucidforge: true` in their frontmatter. You'll get agents like "Backend API", "Frontend", "Data Layer" mapped to your project's architecture.
+- **From Claude Code:** Run `/lucidforge-agents --refresh` to update after restructuring
+- **From the app:** Click "Agents" to add, edit, delete, or merge agents with a visual editor
+- **Manually:** Edit the `.md` files directly
 
-To refresh agents after restructuring your project:
-
-```
-/lucidforge-agents --refresh
-```
-
-You can also manage agents through the LucidForge desktop app — add, edit, delete, and merge agents with a visual UI.
-
-### 2. Run a Feature
-
-```
-/lucidforge "add-user-auth" -p "Add JWT-based authentication with login and register endpoints"
-```
-
-The skill walks through:
-
-- **Discovery** — explores your codebase, asks clarifying questions, writes a feature description
-- **UX Design** (optional) — designs user flows and creates HTML mockups for UI features
-- **Planning** — breaks the feature into steps, assigns each to an agent, predicts file changes
-- **Execution** — spawns agents step by step, validates (build + test) after each
-- **Code Review** — reviews all generated code, auto-fixes issues
-
-Each phase writes artifact files to `.lucidforge/features/{feature-id}/`.
-
-**Flags:**
-- `-p "..."` — feature description (skips the initial "what do you want to build?" question)
-- `--auto-approve` — skip interactive approval gates (useful for CI)
-- `--skip-ux` — skip UX design phase
-
-### 3. Review
-
-Open the LucidForge desktop app. It reads the artifact files and shows:
-
-- **Discovery doc** — what was asked for, requirements, constraints
-- **UX design** — user flows, component specs, HTML mockups
-- **Plan** — step-by-step breakdown with agent assignments
-- **Step review** — per-step diffs, change maps, per-file reasoning, design patterns
-- **Code review issues** — what was found and what was auto-fixed
-
-Mark files as reviewed, inspect the change map to understand how files connect, and read the per-file reasoning to understand *why* each file was changed.
-
-### 4. Approve
-
-Click "Approve Feature" in the app. This creates a single commit on your source branch with all the feature's changes.
+Each agent has:
+- **Identity** — who the agent is and what it owns
+- **Directories** — which parts of the codebase it's responsible for
+- **Instructions** — your project-specific guidelines (you write these)
+- **Learnings** — patterns discovered during feature execution (accumulated automatically)
 
 ## Artifact Files
-
-LucidForge stores everything in `.lucidforge/` at your project root:
 
 ```
 .lucidforge/
 └── features/
     └── add-user-auth/
-        ├── feature.json       # metadata, status, token usage
+        ├── feature.json       # metadata, status
         ├── discovery.md       # feature description
         ├── plan.md            # step plan with task lists
         ├── ux.md              # UX design (optional)
@@ -137,57 +160,19 @@ LucidForge stores everything in `.lucidforge/` at your project root:
             └── ...
 ```
 
-These files are human-readable JSON and markdown. You can inspect them directly, commit them to version control, or build your own tools that read them.
-
-## Agents
-
-LucidForge agents are standard Claude Code agent files (`.claude/agents/*.md`) marked with `lucidforge: true` in their frontmatter:
-
-```markdown
----
-name: Backend API
-description: Handles API layer and business logic
-model: claude-sonnet-4-6
-lucidforge: true
----
-
-You are a senior backend engineer. You own the API layer.
-
-## Directories
-- src/api/
-- src/services/
-
-## Instructions
-- Use dependency injection for all service dependencies
-
-## Learnings
-- The PaymentsService uses gRPC, not REST
-```
-
-Agents accumulate learnings over time as you approve features. The `## Instructions` section is yours to edit — add project-specific guidelines and conventions.
-
-Non-LucidForge agent files (without `lucidforge: true`) are left untouched.
+The artifact schema is documented in [docs/artifact-schema.md](docs/artifact-schema.md). Any tool that reads this format can be a LucidForge viewer.
 
 ## Project Structure
 
 ```
-skill/                              # Claude Code skills
+skill/
     lucidforge/SKILL.md             # feature orchestration
     lucidforge-agents/SKILL.md      # agent generation
+    lucidforge-commit/SKILL.md      # feature commit
 app/                                # Wails desktop app (Go + React)
 docs/                               # design documentation
 install.sh                          # skill installer
 ```
-
-## Documentation
-
-- [Requirements](docs/requirements.md) — what we're building and why
-- [Concepts](docs/concepts.md) — architecture, agents, features, steps, artifacts
-- [Technical Decisions](docs/tech.md) — stack, project structure, open questions
-- [Artifact Schema](docs/artifact-schema.md) — the contract between skills and readers
-- [UI Guide](docs/ui-guide.md) — screens, navigation, layouts
-- [Code Style](docs/code-style.md) — Go and React/TypeScript conventions
-- [Visual Style](docs/style.md) — colors, typography, spacing, components
 
 ## License
 
