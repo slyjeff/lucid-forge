@@ -5,6 +5,7 @@ import { TabBar } from "../components/TabBar";
 import { DiscoveryTab } from "../components/DiscoveryTab";
 import { UxDesignTab } from "../components/UxDesignTab";
 import { PlanTab } from "../components/PlanTab";
+import { StepsTab } from "../components/StepsTab";
 import { IssuesTab } from "../components/IssuesTab";
 import { ApproveDialog } from "../components/ApproveDialog";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -83,11 +84,7 @@ export function FeatureReviewPage() {
       case "plan":
         return <PlanTab content={plan} />;
       case "steps":
-        return (
-          <div style={{ padding: "var(--space-xl)", color: "var(--text-secondary)" }}>
-            Steps tab coming in Phase 7.
-          </div>
-        );
+        return <StepsTab featureId={id!} />;
       case "issues":
         return <IssuesTab review={review} />;
       default:
