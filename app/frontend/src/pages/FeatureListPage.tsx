@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeatures } from "../hooks/useFeatures";
+import { GetProjectRoot, SelectProjectRoot } from "../../wailsjs/go/main/App";
 import logo from "../assets/lucidforge-logo.png";
 import type { Feature } from "../types";
 
@@ -92,8 +94,19 @@ function FeatureCard({ feature }: { feature: Feature }) {
 }
 
 export function FeatureListPage() {
-  const { features, loading } = useFeatures();
+  const { features, loading, refetch } = useFeatures();
   const navigate = useNavigate();
+  const [projectRoot, setProjectRoot] = useState("");
+
+  useEffect(() => {
+    GetProjectRoot().then(setProjectRoot);
+  }, []);
+
+  async function handleSelectProject() {
+    const root = await SelectProjectRoot();
+    setProjectRoot(root);
+    refetch();
+  }
 
   return (
     <div style={{ position: "relative", height: "100%", overflow: "auto" }}>
@@ -116,10 +129,32 @@ export function FeatureListPage() {
         <div
           style={{
             display: "flex",
-            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: "var(--space-md)",
             marginBottom: "var(--space-lg)",
           }}
         >
+          <button
+            onClick={handleSelectProject}
+            style={{
+              background: "transparent",
+              border: "1px solid var(--border)",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              padding: "6px 10px",
+              borderRadius: "var(--radius-md)",
+              fontSize: "var(--label)",
+              fontFamily: "var(--font-mono)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: 400,
+            }}
+            title={projectRoot}
+          >
+            {projectRoot || "Select project..."}
+          </button>
+          <div style={{ flex: 1 }} />
           <button
             onClick={() => navigate("/agents")}
             style={{

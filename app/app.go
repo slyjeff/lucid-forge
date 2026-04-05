@@ -31,11 +31,18 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	// Detect project root from CWD
+	// Try last opened project first
+	if last := features.LoadLastProjectRoot(); last != "" {
+		if _, err := os.Stat(last); err == nil {
+			a.setProjectRoot(last)
+			return
+		}
+	}
+
+	// Fall back to detecting from CWD
 	cwd, _ := os.Getwd()
 	root, err := features.FindProjectRoot(cwd)
 	if err != nil {
-		// No project root found — user can select one later
 		root = cwd
 	}
 	a.setProjectRoot(root)
@@ -49,6 +56,7 @@ func (a *App) shutdown(ctx context.Context) {
 
 func (a *App) setProjectRoot(root string) {
 	a.projectRoot = root
+	features.SaveLastProjectRoot(root)
 	a.artifactStore = artifacts.NewStore(root)
 	a.agentStore = agents.NewStore(filepath.Join(root, ".claude", "agents"))
 
