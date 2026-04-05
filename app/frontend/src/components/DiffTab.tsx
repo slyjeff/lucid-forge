@@ -3,7 +3,7 @@ import { FileList } from "./FileList";
 import { DiffViewer, DiffViewerHandle } from "./DiffViewer";
 import { FileReasoning } from "./FileReasoning";
 import { useDiff } from "../hooks/useDiff";
-import { MarkFileViewed, UnmarkFileViewed } from "../../wailsjs/go/main/App";
+import { MarkFileViewed, UnmarkFileViewed, SaveFileContent } from "../../wailsjs/go/main/App";
 import type { Step } from "../types";
 
 interface DiffTabProps {
@@ -50,6 +50,7 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
   });
   const { diff } = useDiff(featureId, step.order, selectedFile);
   const diffRef = useRef<DiffViewerHandle>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Optimistic local viewed state to avoid re-render disruption from file watcher
   const [localViewed, setLocalViewed] = useState<string[]>(step.viewedFiles ?? []);
@@ -60,6 +61,14 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
   const currentFile = files.find((f) => f.path === selectedFile);
   const matchedDiff = diff && diff.path === selectedFile ? diff : null;
   const isModified = matchedDiff && !matchedDiff.isNew && !matchedDiff.isDeleted;
+
+  function handleContentChange(content: string) {
+    // Debounced auto-save
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      SaveFileContent(selectedFile, content);
+    }, 500);
+  }
 
   function markViewed(path: string) {
     const newViewed = [...localViewed, path];
@@ -188,6 +197,13 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
           >
             {localViewed.includes(selectedFile) ? "\u2713 Viewed" : "Mark Viewed"}
           </button>
+          <button
+            onClick={() => diffRef.current?.openSearch()}
+            style={toolbarBtnStyle}
+            title="Search (Ctrl+F)"
+          >
+            Search
+          </button>
         </div>
 
         {/* Reasoning */}
@@ -207,6 +223,8 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
               isNew={matchedDiff.isNew}
               isDeleted={matchedDiff.isDeleted}
               hideWhitespace={hideWhitespace}
+              editable={!matchedDiff.isDeleted}
+              onContentChange={handleContentChange}
             />
           ) : (
             <div style={{ position: "absolute", inset: 0, background: "var(--bg)" }} />

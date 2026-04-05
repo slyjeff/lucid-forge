@@ -205,6 +205,12 @@ func (a *App) ApproveFeature(featureID string, commitMessage string) error {
 	return a.artifactStore.UpdateFeatureStatus(featureID, artifacts.StatusApproved)
 }
 
+// SaveFileContent writes content to a file in the working tree.
+func (a *App) SaveFileContent(filePath string, content string) error {
+	absPath := filepath.Join(a.projectRoot, filePath)
+	return os.WriteFile(absPath, []byte(content), 0644)
+}
+
 func (a *App) CancelFeature(featureID string) error {
 	return a.artifactStore.UpdateFeatureStatus(featureID, artifacts.StatusCancelled)
 }
