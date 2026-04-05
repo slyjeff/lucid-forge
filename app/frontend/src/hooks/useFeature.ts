@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   GetFeature,
   GetDiscovery,
@@ -23,6 +23,7 @@ export function useFeature(id: string | undefined) {
   const [detail, setDetail] = useState<FeatureDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     if (!id) return;
@@ -30,7 +31,10 @@ export function useFeature(id: string | undefined) {
     let cancelled = false;
 
     async function load() {
-      setLoading(true);
+      // Only show loading spinner on first load, not refetches
+      if (!hasLoaded.current) {
+        setLoading(true);
+      }
       try {
         const [feature, discovery, uxDesign, plan, mockups, review] =
           await Promise.all([
@@ -51,6 +55,7 @@ export function useFeature(id: string | undefined) {
             review,
           });
           setError(null);
+          hasLoaded.current = true;
         }
       } catch (err) {
         if (!cancelled) setError(String(err));

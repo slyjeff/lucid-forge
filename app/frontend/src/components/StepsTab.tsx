@@ -10,8 +10,10 @@ export function StepsTab({ featureId }: StepsTabProps) {
   const { steps, loading } = useSteps(featureId);
   const [selectedStep, setSelectedStep] = useState(0);
   const [subTab, setSubTab] = useState("diff");
+  const [selectedFile, setSelectedFile] = useState<string>("");
 
-  if (loading) {
+  // Show loading only on first load, not on refetches
+  if (loading && steps.length === 0) {
     return (
       <div style={{ padding: "var(--space-xl)", color: "var(--text-secondary)" }}>
         Loading steps...
@@ -38,6 +40,8 @@ export function StepsTab({ featureId }: StepsTabProps) {
         subTab={subTab}
         onSubTabChange={setSubTab}
         onStepChange={setSelectedStep}
+        selectedFile={selectedFile}
+        onSelectedFileChange={setSelectedFile}
       />
     </div>
   );

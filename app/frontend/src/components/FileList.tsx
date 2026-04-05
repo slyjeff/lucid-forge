@@ -81,14 +81,10 @@ export function FileList({
         return (
           <div
             key={file.path}
-            onClick={() => onSelect(file.path)}
             style={{
-              padding: "var(--space-sm) var(--space-lg)",
-              cursor: "pointer",
-              background: active ? "var(--card)" : "transparent",
               display: "flex",
               alignItems: "center",
-              gap: "var(--space-sm)",
+              background: active ? "var(--card)" : "transparent",
               transition: "background 100ms ease",
             }}
             onMouseEnter={(e) => {
@@ -98,49 +94,62 @@ export function FileList({
               if (!active) e.currentTarget.style.background = "transparent";
             }}
           >
-            {/* Viewed indicator */}
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleViewed(file.path);
-              }}
+            {/* Viewed indicator — separate click zone */}
+            <div
+              onClick={() => onToggleViewed(file.path)}
               style={{
                 color: viewed ? "var(--success)" : "var(--accent)",
                 fontSize: 12,
                 cursor: "pointer",
                 flexShrink: 0,
+                padding: "var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg)",
+                userSelect: "none",
               }}
             >
               {viewed ? "\u2713" : "\u25CB"}
-            </span>
+            </div>
 
-            {/* Category badge */}
-            <span
+            {/* File info — separate click zone */}
+            <div
+              onClick={() => onSelect(file.path)}
               style={{
-                color: categoryColor(file.category),
-                fontSize: "var(--label)",
-                fontWeight: "var(--weight-bold)",
-                fontFamily: "var(--font-mono)",
-                flexShrink: 0,
-              }}
-            >
-              {categoryLabel(file.category)}
-            </span>
-
-            {/* Filename */}
-            <span
-              style={{
-                fontSize: "var(--label)",
-                fontFamily: "var(--font-mono)",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-sm)",
+                flex: 1,
+                cursor: "pointer",
+                padding: "var(--space-sm) var(--space-lg) var(--space-sm) 0",
                 overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                color: active ? "var(--text-primary)" : "var(--text-secondary)",
               }}
-              title={file.path}
             >
-              {filename}
-            </span>
+              {/* Category badge */}
+              <span
+                style={{
+                  color: categoryColor(file.category),
+                  fontSize: "var(--label)",
+                  fontWeight: "var(--weight-bold)",
+                  fontFamily: "var(--font-mono)",
+                  flexShrink: 0,
+                }}
+              >
+                {categoryLabel(file.category)}
+              </span>
+
+              {/* Filename */}
+              <span
+                style={{
+                  fontSize: "var(--label)",
+                  fontFamily: "var(--font-mono)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                }}
+                title={file.path}
+              >
+                {filename}
+              </span>
+            </div>
           </div>
         );
       })}

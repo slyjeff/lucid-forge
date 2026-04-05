@@ -11,6 +11,8 @@ interface StepDetailProps {
   subTab: string;
   onSubTabChange: (tab: string) => void;
   onStepChange: (order: number) => void;
+  selectedFile: string;
+  onSelectedFileChange: (path: string) => void;
 }
 
 export function StepDetail({
@@ -20,6 +22,8 @@ export function StepDetail({
   subTab,
   onSubTabChange,
   onStepChange,
+  selectedFile,
+  onSelectedFileChange,
 }: StepDetailProps) {
   const subTabs = [
     { id: "insights", label: "Insights" },
@@ -79,7 +83,14 @@ export function StepDetail({
       {/* Sub-tab content */}
       <div style={{ flex: 1, minHeight: 0, overflow: subTab === "diff" ? "hidden" : "auto" }}>
         {subTab === "insights" && <InsightsPanel step={step} />}
-        {subTab === "diff" && <DiffTab step={step} featureId={featureId} />}
+        {subTab === "diff" && (
+          <DiffTab
+            step={step}
+            featureId={featureId}
+            selectedFile={selectedFile}
+            onSelectedFileChange={onSelectedFileChange}
+          />
+        )}
         {subTab === "map" && <ChangeMapView step={step} />}
       </div>
     </div>

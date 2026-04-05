@@ -9,6 +9,8 @@ import type { Step } from "../types";
 interface DiffTabProps {
   step: Step;
   featureId: string;
+  selectedFile: string;
+  onSelectedFileChange: (path: string) => void;
 }
 
 const toolbarBtnStyle: React.CSSProperties = {
@@ -21,9 +23,15 @@ const toolbarBtnStyle: React.CSSProperties = {
   fontSize: "var(--label)",
 };
 
-export function DiffTab({ step, featureId }: DiffTabProps) {
+export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSelectedFileChange }: DiffTabProps) {
   const files = step.changeMap?.files ?? [];
-  const [selectedFile, setSelectedFile] = useState(files[0]?.path ?? "");
+  const selectedFile = (selectedFileProp && files.some(f => f.path === selectedFileProp))
+    ? selectedFileProp
+    : files[0]?.path ?? "";
+
+  function setSelectedFile(path: string) {
+    onSelectedFileChange(path);
+  }
   const [diffMode, setDiffMode] = useState<"side-by-side" | "unified">("side-by-side");
   const [hideWhitespace, setHideWhitespace] = useState(false);
   const { diff } = useDiff(featureId, step.order, selectedFile);
@@ -36,15 +44,44 @@ export function DiffTab({ step, featureId }: DiffTabProps) {
   }, [step.viewedFiles]);
 
   const currentFile = files.find((f) => f.path === selectedFile);
-  const isModified = diff && !diff.isNew && !diff.isDeleted;
 
-  async function toggleViewed(path: string) {
+  // Keep showing last valid diff until new one arrives
+  const lastDiffRef = useRef(diff);
+  const hasEverLoaded = useRef(false);
+  if (diff && diff.path === selectedFile) {
+    lastDiffRef.current = diff;
+    hasEverLoaded.current = true;
+  }
+  const displayDiff = lastDiffRef.current;
+  const isModified = displayDiff && !displayDiff.isNew && !displayDiff.isDeleted;
+
+  function markViewed(path: string) {
+    const newViewed = [...localViewed, path];
+    setLocalViewed(newViewed);
+    MarkFileViewed(featureId, step.order, path);
+
+    // Navigate to next unviewed file
+    const idx = files.findIndex((f) => f.path === path);
+    for (let i = 1; i <= files.length; i++) {
+      const candidate = files[(idx + i) % files.length].path;
+      if (!newViewed.includes(candidate)) {
+        setSelectedFile(candidate);
+        break;
+      }
+    }
+  }
+
+  function unmarkViewed(path: string) {
+    setLocalViewed(localViewed.filter((f) => f !== path));
+    UnmarkFileViewed(featureId, step.order, path);
+    // Explicitly do NOT navigate
+  }
+
+  function toggleViewed(path: string) {
     if (localViewed.includes(path)) {
-      setLocalViewed(localViewed.filter((f) => f !== path));
-      await UnmarkFileViewed(featureId, step.order, path);
+      unmarkViewed(path);
     } else {
-      setLocalViewed([...localViewed, path]);
-      await MarkFileViewed(featureId, step.order, path);
+      markViewed(path);
     }
   }
 
@@ -154,26 +191,20 @@ export function DiffTab({ step, featureId }: DiffTabProps) {
 
         {/* Monaco diff */}
         <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
-          {diff ? (
+          {displayDiff ? (
             <DiffViewer
               ref={diffRef}
-              oldContent={diff.oldContent}
-              newContent={diff.newContent}
-              filePath={selectedFile}
+              oldContent={displayDiff.oldContent}
+              newContent={displayDiff.newContent}
+              filePath={displayDiff.path}
               mode={diffMode}
-              isNew={diff.isNew}
-              isDeleted={diff.isDeleted}
+              isNew={displayDiff.isNew}
+              isDeleted={displayDiff.isDeleted}
               hideWhitespace={hideWhitespace}
+              initialHide={!hasEverLoaded.current}
             />
           ) : (
-            <div
-              style={{
-                padding: "var(--space-xl)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Select a file to view the diff.
-            </div>
+            <div style={{ position: "absolute", inset: 0, background: "var(--bg)" }} />
           )}
         </div>
       </div>

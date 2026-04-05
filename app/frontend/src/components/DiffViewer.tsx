@@ -1,4 +1,4 @@
-import { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { DiffEditor, Editor } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 
@@ -15,6 +15,7 @@ interface DiffViewerProps {
   isNew?: boolean;
   isDeleted?: boolean;
   hideWhitespace?: boolean;
+  initialHide?: boolean;
 }
 
 function getLanguage(filePath: string): string {
@@ -82,10 +83,11 @@ function decorateAllLines(
 }
 
 export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
-  function DiffViewer({ oldContent, newContent, filePath, mode, isNew, isDeleted, hideWhitespace }, ref) {
+  function DiffViewer({ oldContent, newContent, filePath, mode, isNew, isDeleted, hideWhitespace, initialHide }, ref) {
     const language = getLanguage(filePath);
     const diffEditorRef = useRef<editor.IStandaloneDiffEditor | null>(null);
     const changeIndexRef = useRef(-1);
+    const [ready, setReady] = useState(!initialHide);
 
     useImperativeHandle(ref, () => ({
       goToNextChange: () => {
@@ -110,9 +112,26 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
       },
     }));
 
-    // Reset change index when content changes
+    // When content changes, scroll to first change on the existing editor
+    const prevFileRef = useRef(filePath);
     useEffect(() => {
       changeIndexRef.current = -1;
+      if (prevFileRef.current !== filePath && diffEditorRef.current) {
+        prevFileRef.current = filePath;
+        const tryScroll = () => {
+          const ed = diffEditorRef.current;
+          if (!ed) return;
+          const changes = ed.getLineChanges();
+          if (changes && changes.length > 0) {
+            changeIndexRef.current = 0;
+            const line = Math.max((changes[0].modifiedStartLineNumber || 1) - 3, 1);
+            ed.revealLineNearTop(line);
+          } else {
+            setTimeout(tryScroll, 30);
+          }
+        };
+        setTimeout(tryScroll, 50);
+      }
     }, [oldContent, newContent, filePath]);
 
     // New file
@@ -151,7 +170,7 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
 
     // Modified file
     return (
-      <div style={{ position: "absolute", inset: 0 }}>
+      <div style={{ position: "absolute", inset: 0, opacity: ready ? 1 : 0, transition: "opacity 50ms" }}>
         <DiffEditor
           original={oldContent}
           modified={newContent}
@@ -165,15 +184,19 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
           }}
           onMount={(editor) => {
             diffEditorRef.current = editor;
-            // Jump to first change after diff computes
-            setTimeout(() => {
+            // Jump to first change, then reveal if initially hidden
+            const tryScroll = () => {
               const changes = editor.getLineChanges();
               if (changes && changes.length > 0) {
                 changeIndexRef.current = 0;
                 const line = Math.max((changes[0].modifiedStartLineNumber || 1) - 3, 1);
                 editor.revealLineNearTop(line);
+                if (!ready) setReady(true);
+              } else {
+                setTimeout(tryScroll, 30);
               }
-            }, 150);
+            };
+            setTimeout(tryScroll, 30);
           }}
         />
       </div>
