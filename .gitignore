@@ -1,0 +1,33 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+app/build/
+app/frontend/dist/
+app/frontend/node_modules/
+app/frontend/wailsjs/
+
+# Node
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code
+.claude/settings.local.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LucidForge artifacts (generated at runtime)
+.lucidforge/
