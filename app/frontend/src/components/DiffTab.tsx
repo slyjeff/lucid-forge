@@ -32,8 +32,22 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
   function setSelectedFile(path: string) {
     onSelectedFileChange(path);
   }
-  const [diffMode, setDiffMode] = useState<"side-by-side" | "unified">("side-by-side");
-  const [hideWhitespace, setHideWhitespace] = useState(false);
+
+  function updateDiffMode(mode: "side-by-side" | "unified") {
+    setDiffMode(mode);
+    localStorage.setItem("lucidforge:diffMode", mode);
+  }
+
+  function updateHideWhitespace(value: boolean) {
+    setHideWhitespace(value);
+    localStorage.setItem("lucidforge:hideWhitespace", String(value));
+  }
+  const [diffMode, setDiffMode] = useState<"side-by-side" | "unified">(() => {
+    return (localStorage.getItem("lucidforge:diffMode") as "side-by-side" | "unified") || "side-by-side";
+  });
+  const [hideWhitespace, setHideWhitespace] = useState(() => {
+    return localStorage.getItem("lucidforge:hideWhitespace") === "true";
+  });
   const { diff } = useDiff(featureId, step.order, selectedFile);
   const diffRef = useRef<DiffViewerHandle>(null);
 
@@ -136,6 +150,14 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
               </button>
             </>
           )}
+          <button
+            onClick={() =>
+              updateDiffMode(diffMode === "side-by-side" ? "unified" : "side-by-side")
+            }
+            style={toolbarBtnStyle}
+          >
+            {diffMode === "side-by-side" ? "Unified" : "Side-by-Side"}
+          </button>
           <label
             style={{
               display: "flex",
@@ -150,19 +172,11 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
             <input
               type="checkbox"
               checked={hideWhitespace}
-              onChange={(e) => setHideWhitespace(e.target.checked)}
+              onChange={(e) => updateHideWhitespace(e.target.checked)}
               style={{ cursor: "pointer" }}
             />
             Hide whitespace
           </label>
-          <button
-            onClick={() =>
-              setDiffMode(diffMode === "side-by-side" ? "unified" : "side-by-side")
-            }
-            style={toolbarBtnStyle}
-          >
-            {diffMode === "side-by-side" ? "Unified" : "Side-by-Side"}
-          </button>
           <button
             onClick={() => toggleViewed(selectedFile)}
             style={{
