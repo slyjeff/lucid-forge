@@ -7,18 +7,13 @@ import { UxDesignTab } from "../components/UxDesignTab";
 import { PlanTab } from "../components/PlanTab";
 import { StepsTab } from "../components/StepsTab";
 import { IssuesTab } from "../components/IssuesTab";
-import { ApproveDialog } from "../components/ApproveDialog";
-import { ConfirmDialog } from "../components/ConfirmDialog";
-import { ApproveFeature, CancelFeature } from "../../wailsjs/go/main/App";
+import { ApprovalTab } from "../components/ApprovalTab";
 
 export function FeatureReviewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { detail, loading, error } = useFeature(id);
   const [activeTab, setActiveTab] = useState("discovery");
-  const [showApprove, setShowApprove] = useState(false);
-  const [showCancel, setShowCancel] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -37,37 +32,16 @@ export function FeatureReviewPage() {
   }
 
   const { feature, discovery, uxDesign, plan, mockups, review } = detail;
-  const isReviewable = feature.status === "user-review";
+  const hasSteps = feature.stepCount > 0;
 
   const tabs = [
     { id: "discovery", label: "Discovery" },
     { id: "ux-design", label: "UX Design", visible: feature.hasUxDesign },
     { id: "plan", label: "Plan" },
-    { id: "steps", label: "Steps" },
+    { id: "steps", label: "Steps", visible: hasSteps },
     { id: "issues", label: "Issues", visible: review != null && review.issues?.length > 0 },
+    { id: "approval", label: "Approval", visible: hasSteps },
   ];
-
-  async function handleApprove(message: string) {
-    try {
-      await ApproveFeature(id!, message);
-      setShowApprove(false);
-      setActionError(null);
-      navigate("/");
-    } catch (err) {
-      setActionError(String(err));
-    }
-  }
-
-  async function handleCancel() {
-    try {
-      await CancelFeature(id!);
-      setShowCancel(false);
-      setActionError(null);
-      navigate("/");
-    } catch (err) {
-      setActionError(String(err));
-    }
-  }
 
   function renderTabContent() {
     switch (activeTab) {
@@ -87,6 +61,8 @@ export function FeatureReviewPage() {
         return <StepsTab featureId={id!} />;
       case "issues":
         return <IssuesTab review={review} />;
+      case "approval":
+        return <ApprovalTab feature={feature} featureId={id!} />;
       default:
         return null;
     }
@@ -135,72 +111,6 @@ export function FeatureReviewPage() {
 
       {/* Tab Content */}
       <div style={{ flex: 1, overflow: "auto" }}>{renderTabContent()}</div>
-
-      {/* Footer */}
-      {isReviewable && (
-        <div
-          style={{
-            padding: "var(--space-lg) var(--space-xl)",
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            gap: "var(--space-md)",
-          }}
-        >
-          {actionError && (
-            <span style={{ color: "var(--error)", fontSize: "var(--label)", flex: 1 }}>
-              {actionError}
-            </span>
-          )}
-          <button
-            onClick={() => setShowCancel(true)}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "var(--error)",
-              padding: "6px 10px",
-              cursor: "pointer",
-              borderRadius: "var(--radius-md)",
-              fontSize: "var(--body)",
-            }}
-          >
-            Cancel Feature
-          </button>
-          <button
-            onClick={() => setShowApprove(true)}
-            style={{
-              background: "var(--success)",
-              border: "none",
-              color: "white",
-              padding: "6px 16px",
-              cursor: "pointer",
-              borderRadius: "var(--radius-md)",
-              fontSize: "var(--body)",
-              fontWeight: "var(--weight-semibold)",
-            }}
-          >
-            Approve
-          </button>
-        </div>
-      )}
-
-      {/* Dialogs */}
-      <ApproveDialog
-        open={showApprove}
-        featureName={feature.name}
-        onClose={() => setShowApprove(false)}
-        onApprove={handleApprove}
-      />
-      <ConfirmDialog
-        open={showCancel}
-        title="Cancel Feature"
-        message="This will mark the feature as cancelled. The code changes will remain on the working branch but will not be committed."
-        confirmLabel="Cancel Feature"
-        danger
-        onClose={() => setShowCancel(false)}
-        onConfirm={handleCancel}
-      />
     </div>
   );
 }
