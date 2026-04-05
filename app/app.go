@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -172,37 +171,6 @@ func (a *App) UnmarkFileViewed(featureID string, stepOrder int, filePath string)
 		}
 	}
 	return a.artifactStore.SaveViewedFiles(featureID, stepOrder, viewed)
-}
-
-func (a *App) ApproveFeature(featureID string, commitMessage string) error {
-	feature, err := a.artifactStore.LoadFeature(featureID)
-	if err != nil {
-		return err
-	}
-	if feature.Status != artifacts.StatusUserReview {
-		return fmt.Errorf("feature %s is not in user-review status", featureID)
-	}
-
-	// Collect all changed files across all steps
-	steps, err := a.artifactStore.LoadSteps(featureID)
-	if err != nil {
-		return err
-	}
-	seen := make(map[string]bool)
-	var files []string
-	for _, step := range steps {
-		for _, f := range step.ChangeMap.Files {
-			if !seen[f.Path] {
-				seen[f.Path] = true
-				files = append(files, f.Path)
-			}
-		}
-	}
-
-	if err := git.CommitFiles(a.projectRoot, files, commitMessage); err != nil {
-		return fmt.Errorf("committing: %w", err)
-	}
-	return a.artifactStore.UpdateFeatureStatus(featureID, artifacts.StatusApproved)
 }
 
 // SaveFileContent writes content to a file in the working tree.
