@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FileList } from "./FileList";
-import { DiffViewer } from "./DiffViewer";
+import { DiffViewer, DiffViewerHandle } from "./DiffViewer";
 import { FileReasoning } from "./FileReasoning";
 import { useDiff } from "../hooks/useDiff";
 import { MarkFileViewed, UnmarkFileViewed } from "../../wailsjs/go/main/App";
@@ -11,19 +11,39 @@ interface DiffTabProps {
   featureId: string;
 }
 
+const toolbarBtnStyle: React.CSSProperties = {
+  background: "transparent",
+  border: "1px solid var(--border)",
+  color: "var(--text-secondary)",
+  padding: "2px 8px",
+  cursor: "pointer",
+  borderRadius: "var(--radius-md)",
+  fontSize: "var(--label)",
+};
+
 export function DiffTab({ step, featureId }: DiffTabProps) {
   const files = step.changeMap?.files ?? [];
   const [selectedFile, setSelectedFile] = useState(files[0]?.path ?? "");
   const [diffMode, setDiffMode] = useState<"side-by-side" | "unified">("side-by-side");
-  const { diff, loading } = useDiff(featureId, step.order, selectedFile);
+  const [hideWhitespace, setHideWhitespace] = useState(false);
+  const { diff } = useDiff(featureId, step.order, selectedFile);
+  const diffRef = useRef<DiffViewerHandle>(null);
 
-  const viewedFiles = step.viewedFiles ?? [];
+  // Optimistic local viewed state to avoid re-render disruption from file watcher
+  const [localViewed, setLocalViewed] = useState<string[]>(step.viewedFiles ?? []);
+  useEffect(() => {
+    setLocalViewed(step.viewedFiles ?? []);
+  }, [step.viewedFiles]);
+
   const currentFile = files.find((f) => f.path === selectedFile);
+  const isModified = diff && !diff.isNew && !diff.isDeleted;
 
   async function toggleViewed(path: string) {
-    if (viewedFiles.includes(path)) {
+    if (localViewed.includes(path)) {
+      setLocalViewed(localViewed.filter((f) => f !== path));
       await UnmarkFileViewed(featureId, step.order, path);
     } else {
+      setLocalViewed([...localViewed, path]);
       await MarkFileViewed(featureId, step.order, path);
     }
   }
@@ -41,7 +61,7 @@ export function DiffTab({ step, featureId }: DiffTabProps) {
       {/* File list sidebar */}
       <FileList
         files={files}
-        viewedFiles={viewedFiles}
+        viewedFiles={localViewed}
         selectedPath={selectedFile}
         onSelect={setSelectedFile}
         onToggleViewed={toggleViewed}
@@ -69,55 +89,81 @@ export function DiffTab({ step, featureId }: DiffTabProps) {
           >
             {selectedFile}
           </span>
+          {isModified && (
+            <>
+              <button
+                onClick={() => diffRef.current?.goToPrevChange()}
+                style={toolbarBtnStyle}
+                title="Previous change"
+              >
+                &#x25B2;
+              </button>
+              <button
+                onClick={() => diffRef.current?.goToNextChange()}
+                style={toolbarBtnStyle}
+                title="Next change"
+              >
+                &#x25BC;
+              </button>
+            </>
+          )}
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-xs)",
+              color: "var(--text-secondary)",
+              fontSize: "var(--label)",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={hideWhitespace}
+              onChange={(e) => setHideWhitespace(e.target.checked)}
+              style={{ cursor: "pointer" }}
+            />
+            Hide whitespace
+          </label>
           <button
             onClick={() =>
               setDiffMode(diffMode === "side-by-side" ? "unified" : "side-by-side")
             }
-            style={{
-              background: "transparent",
-              border: "1px solid var(--border)",
-              color: "var(--text-secondary)",
-              padding: "2px 8px",
-              cursor: "pointer",
-              borderRadius: "var(--radius-md)",
-              fontSize: "var(--label)",
-            }}
+            style={toolbarBtnStyle}
           >
             {diffMode === "side-by-side" ? "Unified" : "Side-by-Side"}
           </button>
           <button
             onClick={() => toggleViewed(selectedFile)}
             style={{
-              background: "transparent",
-              border: "1px solid var(--border)",
-              color: viewedFiles.includes(selectedFile)
+              ...toolbarBtnStyle,
+              color: localViewed.includes(selectedFile)
                 ? "var(--success)"
                 : "var(--text-secondary)",
-              padding: "2px 8px",
-              cursor: "pointer",
-              borderRadius: "var(--radius-md)",
-              fontSize: "var(--label)",
             }}
           >
-            {viewedFiles.includes(selectedFile) ? "\u2713 Viewed" : "Mark Viewed"}
+            {localViewed.includes(selectedFile) ? "\u2713 Viewed" : "Mark Viewed"}
           </button>
         </div>
 
         {/* Reasoning */}
         {currentFile?.reasoning && (
-          <FileReasoning reasoning={currentFile.reasoning} />
+          <FileReasoning reasoning={currentFile.reasoning} category={currentFile.category} />
         )}
 
         {/* Monaco diff */}
         <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
           {diff ? (
             <DiffViewer
+              ref={diffRef}
               oldContent={diff.oldContent}
               newContent={diff.newContent}
               filePath={selectedFile}
               mode={diffMode}
               isNew={diff.isNew}
               isDeleted={diff.isDeleted}
+              hideWhitespace={hideWhitespace}
             />
           ) : (
             <div

@@ -2,9 +2,18 @@ import { useState } from "react";
 
 interface FileReasoningProps {
   reasoning: string;
+  category?: string;
 }
 
-export function FileReasoning({ reasoning }: FileReasoningProps) {
+function actionLabel(category?: string): string {
+  switch (category) {
+    case "add": return "Why this file was added";
+    case "delete": return "Why this file was deleted";
+    default: return "Why this file changed";
+  }
+}
+
+export function FileReasoning({ reasoning, category }: FileReasoningProps) {
   const [expanded, setExpanded] = useState(true);
 
   return (
@@ -31,7 +40,7 @@ export function FileReasoning({ reasoning }: FileReasoningProps) {
         }}
       >
         <span style={{ fontSize: 10 }}>{expanded ? "\u25BC" : "\u25B6"}</span>
-        Why this file changed
+        {actionLabel(category)}
       </button>
       {expanded && (
         <div

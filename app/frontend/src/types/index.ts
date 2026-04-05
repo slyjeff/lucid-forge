@@ -23,6 +23,7 @@ export type FeatureStatus =
   | "planning"
   | "executing"
   | "code-review"
+  | "documenting"
   | "user-review"
   | "approved"
   | "cancelled";

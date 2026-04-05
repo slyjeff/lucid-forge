@@ -77,6 +77,7 @@ All paths are relative to the project root. The `.lucidforge/` directory lives a
 | `planning` | Skill is generating the plan | Skill |
 | `executing` | Skill is executing steps | Skill |
 | `code-review` | Skill is reviewing generated code | Skill |
+| `documenting` | Skill is updating documentation | Skill |
 | `user-review` | Ready for human review | Skill |
 | `approved` | User approved; changes committed | Reader |
 | `cancelled` | User cancelled the feature | Reader |

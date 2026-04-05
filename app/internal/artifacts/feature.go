@@ -8,8 +8,9 @@ const (
 	StatusDiscovery  FeatureStatus = "discovery"
 	StatusPlanning   FeatureStatus = "planning"
 	StatusExecuting  FeatureStatus = "executing"
-	StatusCodeReview FeatureStatus = "code-review"
-	StatusUserReview FeatureStatus = "user-review"
+	StatusCodeReview  FeatureStatus = "code-review"
+	StatusDocumenting FeatureStatus = "documenting"
+	StatusUserReview  FeatureStatus = "user-review"
 	StatusApproved   FeatureStatus = "approved"
 	StatusCancelled  FeatureStatus = "cancelled"
 )

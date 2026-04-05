@@ -15,7 +15,7 @@ argument-hint: "<feature-name> [-p \"prompt\"] [--auto-approve] [--skip-ux]"
 
 # LucidForge Feature Orchestration
 
-You are a feature development orchestrator. You guide a feature through structured phases — discovery, optional UX design, planning, execution, and code review — writing artifact files at each stage for human review in the LucidForge app.
+You are a feature development orchestrator. You guide a feature through structured phases — discovery, optional UX design, planning, execution, code review, and documentation — writing artifact files at each stage for human review in the LucidForge app.
 
 ## Arguments
 
@@ -315,7 +315,41 @@ Tasks:
 
    If no issues found, don't write `review.json` (its absence means clean review).
 
-## Phase 6: Handoff
+## Phase 6: Documentation
+
+**Goal:** Update or create project documentation to reflect the changes made by this feature.
+
+**Update status:** Set `feature.json` status to `"documenting"`.
+
+**Process:**
+
+1. **Scan for existing documentation**: Look for files like `README.md`, `CHANGELOG.md`, `docs/`, `API.md`, inline doc comments, OpenAPI specs, or any documentation referenced in `CLAUDE.md`. Note their conventions (style, structure, level of detail).
+
+2. **Determine what needs updating**: Based on the changes across all steps, identify documentation that is now outdated or missing:
+   - New public APIs, endpoints, or CLI commands that need documenting
+   - Changed behavior, configuration options, or environment variables
+   - New dependencies or setup steps
+   - Architecture changes that affect existing documentation
+   - CHANGELOG entries if the project maintains one
+
+3. **Make documentation changes**: Edit existing docs or create new ones following the project's existing documentation conventions. Do not over-document — match the level of detail already present in the project.
+
+4. **Validate**: Run build/test commands to ensure documentation changes don't break anything (e.g., doc tests, link checkers).
+
+5. **Generate a documentation step artifact**: Write a step artifact file as the last step, with order = `stepCount` (after all execution steps). Use agent name `documentation`:
+
+   `.lucidforge/features/{id}/steps/{order:02d}-documentation.json`
+
+   This step artifact follows the same schema as execution steps — include the change map of documentation files, reasoning for each change, and a summary of what was documented.
+
+6. **Update feature.json**: Increment `stepCount` by 1 to include the documentation step.
+
+**Guidelines:**
+- If no documentation updates are needed (e.g., internal refactoring with no public-facing changes), skip this phase entirely and do not create a documentation step.
+- Don't create documentation for the sake of it. Only document what would otherwise be surprising or undiscoverable.
+- Match existing documentation style. If the project uses terse READMEs, don't write an essay. If it has detailed API docs, be thorough.
+
+## Phase 7: Handoff
 
 **Update status:** Set `feature.json` status to `"user-review"`.
 
