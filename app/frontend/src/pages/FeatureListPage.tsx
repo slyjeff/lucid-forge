@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeatures } from "../hooks/useFeatures";
-import { GetProjectRoot, SelectProjectRoot, ApproveFeature, CancelFeature } from "../../wailsjs/go/main/App";
-import { ApproveDialog } from "../components/ApproveDialog";
+import { GetProjectRoot, SelectProjectRoot, CancelFeature } from "../../wailsjs/go/main/App";
 import { Dialog } from "../components/Dialog";
 import logo from "../assets/lucidforge-logo.png";
 import type { Feature } from "../types";
@@ -33,11 +32,10 @@ const iconBtnBase: React.CSSProperties = {
 
 interface FeatureCardProps {
   feature: Feature;
-  onApprove: (feature: Feature) => void;
   onCancel: (feature: Feature) => void;
 }
 
-function FeatureCard({ feature, onApprove, onCancel }: FeatureCardProps) {
+function FeatureCard({ feature, onCancel }: FeatureCardProps) {
   const navigate = useNavigate();
   const isReviewable = feature.status === "user-review";
 
@@ -95,21 +93,6 @@ function FeatureCard({ feature, onApprove, onCancel }: FeatureCardProps) {
             style={{ display: "flex", gap: "var(--space-xs)" }}
           >
             <button
-              onClick={() => onApprove(feature)}
-              style={{ ...iconBtnBase, color: "var(--success)" }}
-              title="Commit feature"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--success-subtle)";
-                e.currentTarget.style.borderColor = "var(--success)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = "transparent";
-              }}
-            >
-              &#x2714;
-            </button>
-            <button
               onClick={() => onCancel(feature)}
               style={{ ...iconBtnBase, color: "var(--error)" }}
               title="Cancel feature"
@@ -154,7 +137,6 @@ export function FeatureListPage() {
   const { features, loading, refetch } = useFeatures();
   const navigate = useNavigate();
   const [projectRoot, setProjectRoot] = useState("");
-  const [approving, setApproving] = useState<Feature | null>(null);
   const [cancelling, setCancelling] = useState<Feature | null>(null);
 
   useEffect(() => {
@@ -165,14 +147,6 @@ export function FeatureListPage() {
     const root = await SelectProjectRoot();
     setProjectRoot(root);
     refetch();
-  }
-
-  async function handleApprove(message: string) {
-    if (approving) {
-      await ApproveFeature(approving.id, message);
-      setApproving(null);
-      refetch();
-    }
   }
 
   async function handleCancel(revertChanges: boolean) {
@@ -269,7 +243,6 @@ export function FeatureListPage() {
               <FeatureCard
                 key={f.id}
                 feature={f}
-                onApprove={setApproving}
                 onCancel={setCancelling}
               />
             ))}
@@ -277,14 +250,6 @@ export function FeatureListPage() {
         )}
       </div>
 
-      {approving && (
-        <ApproveDialog
-          open={true}
-          featureName={approving.name}
-          onClose={() => setApproving(null)}
-          onApprove={handleApprove}
-        />
-      )}
       {cancelling && (
         <Dialog open={true} onClose={() => setCancelling(null)}>
           <h2

@@ -78,15 +78,22 @@ Everything is in `.lucidforge/features/{feature-id}/` as human-readable JSON and
 
 ### 5. Commit the feature
 
-**From the app:** Click the ✔ button next to the feature on the main screen. Enter a commit message. All changed files are staged and committed.
-
-**From Claude Code:**
+In Claude Code, run:
 
 ```
 /lucidforge-commit
 ```
 
-This finds features ready for review, shows you a proposed commit message, and creates a single commit with all the feature's changes. It does not push.
+This:
+1. Finds features ready for review (or takes a feature ID)
+2. Extracts learnings from the feature's execution and appends them to the relevant agent files
+3. Shows a proposed commit message for your approval
+4. Stages all changed files plus updated agent files
+5. Creates a single commit (does not push)
+
+Agents accumulate project-specific knowledge through learnings — patterns, gotchas, conventions, and relationships discovered during each feature. These learnings make future features more accurate.
+
+You can also cancel a feature from the app (✖ button on the feature card), with the option to revert changes or keep them.
 
 ## Install
 
