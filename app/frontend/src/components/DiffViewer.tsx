@@ -64,23 +64,6 @@ const baseOptions: editor.IStandaloneEditorConstructionOptions = {
   contextmenu: false,
 };
 
-function decorateAllLines(
-  editor: editor.IStandaloneCodeEditor,
-  className: string
-) {
-  const model = editor.getModel();
-  if (!model) return;
-  const lineCount = model.getLineCount();
-  const decorations: editor.IModelDeltaDecoration[] = [];
-  for (let i = 1; i <= lineCount; i++) {
-    decorations.push({
-      range: { startLineNumber: i, startColumn: 1, endLineNumber: i, endColumn: 1 },
-      options: { isWholeLine: true, className },
-    });
-  }
-  editor.createDecorationsCollection(decorations);
-}
-
 function revealChange(ed: editor.IStandaloneDiffEditor, change: editor.ILineChange) {
   const startLine = Math.max((change.modifiedStartLineNumber || 1) - 2, 1);
   const endLine = (change.modifiedEndLineNumber || change.modifiedStartLineNumber || 1) + 2;
@@ -132,6 +115,16 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
       },
     }));
 
+    // Update editor options when mode or whitespace setting changes
+    useEffect(() => {
+      if (diffEditorRef.current && !isNew && !isDeleted) {
+        diffEditorRef.current.updateOptions({
+          renderSideBySide: mode === "side-by-side",
+          ignoreTrimWhitespace: hideWhitespace ?? false,
+        });
+      }
+    }, [mode, hideWhitespace, isNew, isDeleted]);
+
     // Scroll to first change when content changes
     const prevContentRef = useRef({ oldContent, newContent, filePath });
     useEffect(() => {
@@ -152,14 +145,12 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
     if (isNew) {
       return (
         <div style={{ position: "absolute", inset: 0 }}>
-          <style>{`.line-added { background: var(--diff-added-bg) !important; }`}</style>
           <Editor
             value={newContent}
             language={language}
             theme="vs-dark"
             height="100%"
             options={baseOptions}
-            onMount={(editor) => decorateAllLines(editor, "line-added")}
           />
         </div>
       );
@@ -169,14 +160,12 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
     if (isDeleted) {
       return (
         <div style={{ position: "absolute", inset: 0 }}>
-          <style>{`.line-removed { background: var(--diff-removed-bg) !important; }`}</style>
           <Editor
             value={oldContent}
             language={language}
             theme="vs-dark"
             height="100%"
             options={baseOptions}
-            onMount={(editor) => decorateAllLines(editor, "line-removed")}
           />
         </div>
       );
@@ -186,6 +175,7 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
     return (
       <div style={{ position: "absolute", inset: 0 }}>
         <DiffEditor
+          key={`${mode}-${hideWhitespace}`}
           original={oldContent}
           modified={newContent}
           language={language}
