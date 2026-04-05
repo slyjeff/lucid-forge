@@ -44,16 +44,8 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
   }, [step.viewedFiles]);
 
   const currentFile = files.find((f) => f.path === selectedFile);
-
-  // Keep showing last valid diff until new one arrives
-  const lastDiffRef = useRef(diff);
-  const hasEverLoaded = useRef(false);
-  if (diff && diff.path === selectedFile) {
-    lastDiffRef.current = diff;
-    hasEverLoaded.current = true;
-  }
-  const displayDiff = lastDiffRef.current;
-  const isModified = displayDiff && !displayDiff.isNew && !displayDiff.isDeleted;
+  const matchedDiff = diff && diff.path === selectedFile ? diff : null;
+  const isModified = matchedDiff && !matchedDiff.isNew && !matchedDiff.isDeleted;
 
   function markViewed(path: string) {
     const newViewed = [...localViewed, path];
@@ -191,17 +183,16 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
 
         {/* Monaco diff */}
         <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
-          {displayDiff ? (
+          {matchedDiff ? (
             <DiffViewer
               ref={diffRef}
-              oldContent={displayDiff.oldContent}
-              newContent={displayDiff.newContent}
-              filePath={displayDiff.path}
+              oldContent={matchedDiff.oldContent}
+              newContent={matchedDiff.newContent}
+              filePath={matchedDiff.path}
               mode={diffMode}
-              isNew={displayDiff.isNew}
-              isDeleted={displayDiff.isDeleted}
+              isNew={matchedDiff.isNew}
+              isDeleted={matchedDiff.isDeleted}
               hideWhitespace={hideWhitespace}
-              initialHide={!hasEverLoaded.current}
             />
           ) : (
             <div style={{ position: "absolute", inset: 0, background: "var(--bg)" }} />
