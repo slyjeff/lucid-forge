@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"syscall"
 )
 
 // runGit executes a git command in the given repo directory and returns stdout.
 func runGit(repoRoot string, args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = repoRoot
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
