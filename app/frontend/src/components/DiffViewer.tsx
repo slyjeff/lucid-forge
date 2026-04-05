@@ -137,11 +137,15 @@ export function DiffViewer({
         options={{
           ...baseOptions,
           renderSideBySide: mode === "side-by-side",
-          hideUnchangedRegions: {
-            enabled: true,
-            contextLineCount: 3,
-            minimumLineCount: 5,
-          },
+        } as any}
+        onMount={(editor) => {
+          editor.updateOptions({
+            hideUnchangedRegions: {
+              enabled: true,
+              contextLineCount: 3,
+              minimumLineCount: 5,
+            },
+          } as any);
         }}
       />
     </div>

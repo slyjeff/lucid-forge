@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFeature } from "../hooks/useFeature";
 import { TabBar } from "../components/TabBar";
@@ -14,6 +14,16 @@ export function FeatureReviewPage() {
   const navigate = useNavigate();
   const { detail, loading, error } = useFeature(id);
   const [activeTab, setActiveTab] = useState("discovery");
+  const initialTabSet = useRef(false);
+
+  useEffect(() => {
+    if (detail && !initialTabSet.current) {
+      initialTabSet.current = true;
+      if (detail.feature.stepCount > 0) {
+        setActiveTab("steps");
+      }
+    }
+  }, [detail]);
 
   if (loading) {
     return (
@@ -38,7 +48,7 @@ export function FeatureReviewPage() {
     { id: "discovery", label: "Discovery" },
     { id: "ux-design", label: "UX Design", visible: feature.hasUxDesign },
     { id: "plan", label: "Plan" },
-    { id: "steps", label: "Steps", visible: hasSteps },
+    { id: "steps", label: "Review", visible: hasSteps },
     { id: "issues", label: "Issues", visible: review != null && review.issues?.length > 0 },
     { id: "approval", label: "Approval", visible: hasSteps },
   ];
