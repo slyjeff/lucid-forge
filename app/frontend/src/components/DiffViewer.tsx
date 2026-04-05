@@ -74,9 +74,13 @@ export const DiffViewer = forwardRef<DiffViewerHandle, DiffViewerProps>(
         revealChange(ed, changes[changeIndexRef.current]);
       },
       openSearch: () => {
-        const ed = editorRef.current || diffEditorRef.current?.getModifiedEditor();
-        if (ed) {
-          ed.getAction("actions.find")?.run();
+        if (diffEditorRef.current) {
+          // Trigger find on the diff editor's modified side, focused
+          const mod = diffEditorRef.current.getModifiedEditor();
+          mod.focus();
+          mod.trigger("keyboard", "actions.find", null);
+        } else if (editorRef.current) {
+          editorRef.current.trigger("keyboard", "actions.find", null);
         }
       },
       getModifiedContent: () => {
