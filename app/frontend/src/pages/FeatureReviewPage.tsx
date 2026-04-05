@@ -7,7 +7,6 @@ import { UxDesignTab } from "../components/UxDesignTab";
 import { PlanTab } from "../components/PlanTab";
 import { StepsTab } from "../components/StepsTab";
 import { IssuesTab } from "../components/IssuesTab";
-import { ApprovalTab } from "../components/ApprovalTab";
 
 export function FeatureReviewPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,9 +43,8 @@ export function FeatureReviewPage() {
     { id: "discovery", label: "Discovery" },
     { id: "ux-design", label: "UX Design", visible: feature.hasUxDesign },
     { id: "plan", label: "Plan" },
+    { id: "issues", label: "AI Review Notes", visible: review != null && review.issues?.length > 0 },
     { id: "steps", label: "Review", visible: hasSteps },
-    { id: "issues", label: "Issues", visible: review != null && review.issues?.length > 0 },
-    { id: "approval", label: "Approval", visible: hasSteps },
   ];
 
   function renderTabContent() {
@@ -67,8 +65,6 @@ export function FeatureReviewPage() {
         return <StepsTab featureId={id!} />;
       case "issues":
         return <IssuesTab review={review} />;
-      case "approval":
-        return <ApprovalTab feature={feature} featureId={id!} />;
       default:
         return null;
     }
