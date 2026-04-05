@@ -44,7 +44,7 @@ if [[ -z "$TARGET" ]]; then
     TARGET="$HOME/.claude/skills"
 fi
 
-if [[ ! -d "$SKILL_DIR/lucidforge" ]] || [[ ! -d "$SKILL_DIR/lucidforge-agents" ]] || [[ ! -d "$SKILL_DIR/lucidforge-commit" ]]; then
+if [[ ! -d "$SKILL_DIR/lucidforge" ]] || [[ ! -d "$SKILL_DIR/lucidforge-agents" ]] || [[ ! -d "$SKILL_DIR/lucidforge-commit" ]] || [[ ! -d "$SKILL_DIR/lucidforge-cancel" ]]; then
     echo "Error: skill/ directory not found. Run this script from the LucidForge repo root."
     exit 1
 fi
@@ -54,11 +54,13 @@ mkdir -p "$TARGET"
 cp -r "$SKILL_DIR/lucidforge" "$TARGET/"
 cp -r "$SKILL_DIR/lucidforge-agents" "$TARGET/"
 cp -r "$SKILL_DIR/lucidforge-commit" "$TARGET/"
+cp -r "$SKILL_DIR/lucidforge-cancel" "$TARGET/"
 
 echo "Installed LucidForge skills to $TARGET/"
 echo ""
 echo "  $TARGET/lucidforge/SKILL.md"
 echo "  $TARGET/lucidforge-agents/SKILL.md"
 echo "  $TARGET/lucidforge-commit/SKILL.md"
+echo "  $TARGET/lucidforge-cancel/SKILL.md"
 echo ""
 echo "Open Claude Code and run /lucidforge-agents to get started."

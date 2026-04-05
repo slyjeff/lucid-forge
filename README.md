@@ -134,6 +134,7 @@ The built binary is in `app/build/bin/`.
 | `lucidforge` | `/lucidforge "name" -p "description"` | Orchestrate a full feature |
 | `lucidforge-agents` | `/lucidforge-agents` | Generate or refresh project agents |
 | `lucidforge-commit` | `/lucidforge-commit [feature-id]` | Commit a completed feature |
+| `lucidforge-cancel` | `/lucidforge-cancel [feature-id]` | Cancel a feature, optionally revert changes |
 
 ## Managing Agents
 
