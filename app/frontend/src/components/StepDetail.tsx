@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { TabBar } from "./TabBar";
 import { InsightsPanel } from "./InsightsPanel";
 import { DiffTab } from "./DiffTab";
@@ -7,12 +6,21 @@ import type { Step } from "../types";
 
 interface StepDetailProps {
   step: Step;
+  steps: Step[];
   featureId: string;
+  subTab: string;
+  onSubTabChange: (tab: string) => void;
+  onStepChange: (order: number) => void;
 }
 
-export function StepDetail({ step, featureId }: StepDetailProps) {
-  const [subTab, setSubTab] = useState("insights");
-
+export function StepDetail({
+  step,
+  steps,
+  featureId,
+  subTab,
+  onSubTabChange,
+  onStepChange,
+}: StepDetailProps) {
   const subTabs = [
     { id: "insights", label: "Insights" },
     { id: "diff", label: "Diff" },
@@ -21,7 +29,7 @@ export function StepDetail({ step, featureId }: StepDetailProps) {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* Step header */}
+      {/* Step header with dropdown */}
       <div
         style={{
           padding: "var(--space-md) var(--space-lg)",
@@ -30,14 +38,27 @@ export function StepDetail({ step, featureId }: StepDetailProps) {
           gap: "var(--space-md)",
         }}
       >
-        <span
+        <select
+          value={step.order}
+          onChange={(e) => onStepChange(Number(e.target.value))}
           style={{
-            fontSize: "var(--title)",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius)",
+            padding: "var(--space-sm) var(--space-md)",
+            color: "var(--text-primary)",
+            fontSize: "var(--body)",
             fontWeight: "var(--weight-semibold)",
+            cursor: "pointer",
+            maxWidth: 400,
           }}
         >
-          {step.title}
-        </span>
+          {steps.map((s) => (
+            <option key={s.order} value={s.order}>
+              Step {s.order + 1}: {s.title}
+            </option>
+          ))}
+        </select>
         <span
           style={{
             fontSize: "var(--label)",
@@ -53,7 +74,7 @@ export function StepDetail({ step, featureId }: StepDetailProps) {
       </div>
 
       {/* Sub-tab bar */}
-      <TabBar tabs={subTabs} activeTab={subTab} onTabChange={setSubTab} />
+      <TabBar tabs={subTabs} activeTab={subTab} onTabChange={onSubTabChange} />
 
       {/* Sub-tab content */}
       <div style={{ flex: 1, minHeight: 0, overflow: subTab === "diff" ? "hidden" : "auto" }}>

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useSteps } from "../hooks/useSteps";
-import { StepSidebar } from "./StepSidebar";
 import { StepDetail } from "./StepDetail";
 
 interface StepsTabProps {
@@ -10,6 +9,7 @@ interface StepsTabProps {
 export function StepsTab({ featureId }: StepsTabProps) {
   const { steps, loading } = useSteps(featureId);
   const [selectedStep, setSelectedStep] = useState(0);
+  const [subTab, setSubTab] = useState("diff");
 
   if (loading) {
     return (
@@ -30,15 +30,15 @@ export function StepsTab({ featureId }: StepsTabProps) {
   const step = steps.find((s) => s.order === selectedStep) || steps[0];
 
   return (
-    <div style={{ display: "flex", height: "100%" }}>
-      <StepSidebar
+    <div style={{ height: "100%", overflow: "hidden" }}>
+      <StepDetail
+        step={step}
         steps={steps}
-        selectedOrder={step.order}
-        onSelect={setSelectedStep}
+        featureId={featureId}
+        subTab={subTab}
+        onSubTabChange={setSubTab}
+        onStepChange={setSelectedStep}
       />
-      <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-        <StepDetail step={step} featureId={featureId} />
-      </div>
     </div>
   );
 }
