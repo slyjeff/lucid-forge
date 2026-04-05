@@ -196,7 +196,7 @@ Tasks:
 
 1. **Write the initial step artifact**: Before spawning the agent, write `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json` with `status: "executing"` and all tasks marked `completed: false`. Include the step's title, agent, order, and the task list from the plan. Leave `changeMap`, `patterns`, `changeSummary`, and `usage` as empty/zero values. This lets the LucidForge GUI show real-time progress — which step is running and which tasks are pending.
 
-2. **Spawn the agent**: Use the Agent tool to spawn the step's assigned agent. Pass it a prompt containing:
+2. **Spawn the agent**: Use the Agent tool to spawn the step's assigned agent. The step's agent field names the agent — use `.claude/agents/{agent-name}.md` as the agent (e.g., `Agent("@backend-api", ...)`). Pass it a prompt containing:
    - The full task list for this step (all tasks visible for context)
    - The discovery document context (key requirements)
    - The UX design context if relevant

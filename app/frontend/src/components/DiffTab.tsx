@@ -132,23 +132,39 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
             fontSize: "var(--label)",
           }}
         >
-          <span
+          <label
             style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "var(--code)",
               flex: 1,
               display: "flex",
               alignItems: "center",
               gap: "var(--space-sm)",
+              cursor: "pointer",
+              userSelect: "none",
             }}
           >
-            {selectedFile}
-            {matchedDiff && !matchedDiff.isDeleted && (
-              <span style={{ color: "var(--text-dim)", fontSize: "var(--label)", fontFamily: "var(--font-ui)" }}>
-                (editable)
-              </span>
-            )}
-          </span>
+            <input
+              type="checkbox"
+              checked={localViewed.includes(selectedFile)}
+              onChange={() => toggleViewed(selectedFile)}
+              style={{ cursor: "pointer", flexShrink: 0 }}
+            />
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--code)",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-sm)",
+              }}
+            >
+              {selectedFile}
+              {matchedDiff && !matchedDiff.isDeleted && (
+                <span style={{ color: "var(--text-dim)", fontSize: "var(--label)", fontFamily: "var(--font-ui)" }}>
+                  (editable)
+                </span>
+              )}
+            </span>
+          </label>
           {isModified && (
             <>
               <button
@@ -194,17 +210,6 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
             />
             Hide whitespace
           </label>
-          <button
-            onClick={() => toggleViewed(selectedFile)}
-            style={{
-              ...toolbarBtnStyle,
-              color: localViewed.includes(selectedFile)
-                ? "var(--success)"
-                : "var(--text-secondary)",
-            }}
-          >
-            {localViewed.includes(selectedFile) ? "\u2713 Viewed" : "Mark Viewed"}
-          </button>
           <button
             onClick={() => diffRef.current?.openSearch()}
             style={toolbarBtnStyle}

@@ -94,6 +94,8 @@ Discovery → (UX Design) → Planning → Execution → Code Review → User Re
 
 The skill drives everything up through code review. UX design is optional — skipped when the feature has no user-facing changes. Readers handle user review. The handoff point is when the skill writes the final artifact files and sets the feature status to `user-review`.
 
+After handoff, the user can make targeted changes with `/lucidforge-change`. This skill takes a natural-language description, matches it to the right step and agent, makes the change, validates, and updates the step artifact (files, members, connections, patterns, summary). It clears `viewedFiles` for any file it touches so the reviewer knows to re-check. It can be called multiple times on the same feature.
+
 Readers present the full picture: discovery (the intent), UX design (the design), plan (the approach), and then step-by-step code changes (the implementation). This lets reviewers evaluate not just "is the code correct?" but "does the code match what was asked for?"
 
 Features are stored as a directory of artifact files under `.lucidforge/features/{feature-id}/`.

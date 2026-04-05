@@ -8,6 +8,7 @@ Producer-consumer model with the artifact schema at the center:
 
 - **Agent Skill** (`skill/lucidforge-agents/SKILL.md`) — Claude Code skill that scans the project and generates LucidForge agent files
 - **Feature Skill** (`skill/lucidforge/SKILL.md`) — Claude Code skill that orchestrates multi-step feature development, writes artifact files to `.lucidforge/features/`
+- **Change Skill** (`skill/lucidforge-change/SKILL.md`) — Claude Code skill for making targeted changes to a feature's code and updating the step artifact
 - **Wails App** (`app/`) — Go + React desktop app, the reference implementation
 - **VS Code Extension** — separate repo, TypeScript
 - **JetBrains Plugin** — separate repo, Kotlin
@@ -26,6 +27,7 @@ wails build    # production build
 
 ```
 skill/lucidforge/SKILL.md          # feature orchestration skill
+skill/lucidforge-change/SKILL.md   # targeted change + step update skill
 skill/lucidforge-agents/SKILL.md   # agent generation skill
 app/                           # Wails desktop app (Go + React)
     main.go                    # entry point
