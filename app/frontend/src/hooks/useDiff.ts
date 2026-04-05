@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { GetDiff } from "../../wailsjs/go/main/App";
 import type { FileDiff } from "../types";
 
@@ -10,20 +10,24 @@ export function useDiff(
   const [diff, setDiff] = useState<FileDiff | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const prevDiff = useRef<FileDiff | null>(null);
 
   useEffect(() => {
     if (!featureId || stepOrder === undefined || !filePath) {
       setDiff(null);
+      prevDiff.current = null;
       return;
     }
 
     let cancelled = false;
     setLoading(true);
+    // Keep previous diff visible while loading
 
     GetDiff(featureId, stepOrder, filePath)
       .then((d) => {
         if (!cancelled) {
           setDiff(d);
+          prevDiff.current = d;
           setError(null);
         }
       })
@@ -39,5 +43,6 @@ export function useDiff(
     };
   }, [featureId, stepOrder, filePath]);
 
-  return { diff, loading, error };
+  // Return previous diff while loading so Monaco stays mounted
+  return { diff: diff ?? prevDiff.current, loading, error };
 }

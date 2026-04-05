@@ -110,16 +110,7 @@ export function DiffTab({ step, featureId }: DiffTabProps) {
 
         {/* Monaco diff */}
         <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
-          {loading ? (
-            <div
-              style={{
-                padding: "var(--space-xl)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Loading diff...
-            </div>
-          ) : diff ? (
+          {diff ? (
             <DiffViewer
               oldContent={diff.oldContent}
               newContent={diff.newContent}

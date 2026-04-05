@@ -55,7 +55,7 @@ export function StepDetail({
         >
           {steps.map((s) => (
             <option key={s.order} value={s.order}>
-              Step {s.order + 1}: {s.title}
+              {s.title}
             </option>
           ))}
         </select>
