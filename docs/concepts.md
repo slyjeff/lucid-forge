@@ -110,6 +110,8 @@ A step is a single unit of execution within a feature — one agent doing one co
 - **Validation result**: whether build/test passed and how many retries were needed
 - **Token usage**: input/output tokens and estimated cost
 
+Step artifact files are written in two phases for real-time progress tracking. Before the agent starts, the skill writes the step file with `status: "executing"` and all tasks marked incomplete. After the agent finishes and validation passes, the skill overwrites the file with the full artifact (change map, patterns, summary, `status: "completed"`). This means readers can show which step is currently running and which tasks are pending — even while the skill is still executing.
+
 Steps accumulate changes in the working tree without per-step commits. One commit per feature on approval.
 
 ## Change Maps
@@ -139,6 +141,8 @@ The structured output the skill writes and readers consume. See [artifact-schema
 Readers render `discovery.md`, `ux.md`, and `plan.md` as formatted markdown — these documents give reviewers the *intent* (what was asked for, what the UX should look like, what was planned) so they can evaluate whether the code matches.
 
 One exception: `viewedFiles` in step artifacts is written by readers (tracking which files the user has reviewed). This is the only field readers write.
+
+The `viewedFiles` field also serves as a review gate: the CLI commit skill (`/lucidforge-commit`) checks whether all changed files have been marked as viewed before creating the commit. If files are unviewed, it warns the user and lists them — suggesting the LucidForge GUI if none have been reviewed at all. The user can override this soft block, but the intent is to encourage thorough review before approval.
 
 ## Validation
 

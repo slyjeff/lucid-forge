@@ -194,7 +194,9 @@ Tasks:
 
 **Process for each step:**
 
-1. **Spawn the agent**: Use the Agent tool to spawn the step's assigned agent. Pass it a prompt containing:
+1. **Write the initial step artifact**: Before spawning the agent, write `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json` with `status: "executing"` and all tasks marked `completed: false`. Include the step's title, agent, order, and the task list from the plan. Leave `changeMap`, `patterns`, `changeSummary`, and `usage` as empty/zero values. This lets the LucidForge GUI show real-time progress — which step is running and which tasks are pending.
+
+2. **Spawn the agent**: Use the Agent tool to spawn the step's assigned agent. Pass it a prompt containing:
    - The full task list for this step (all tasks visible for context)
    - The discovery document context (key requirements)
    - The UX design context if relevant
@@ -202,18 +204,18 @@ Tasks:
    - The list of files it's expected to change
    - Clear instruction: implement the tasks, edit/create the files, and report what you did
 
-2. **Validate**: After the agent completes, run build and test commands:
+3. **Validate**: After the agent completes, run build and test commands:
    ```bash
    {build command}   # e.g., go build ./..., npm run build, dotnet build
    {test command}    # e.g., go test ./..., npm test, dotnet test
    ```
    If validation fails, send the error output back to the same agent and ask it to fix. Retry up to 3 times.
 
-3. **Generate step artifacts**: After the agent completes (and validation passes), analyze what changed and write the step artifact file.
+4. **Update the step artifact**: After the agent completes (and validation passes), analyze what changed and update the existing step artifact file.
 
    Determine which files were actually changed by the agent (use `git diff --name-only` against the base state before this step).
 
-   Write `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json`:
+   Update `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json` — overwrite the initial file with the full artifact:
 
    ```json
    {
@@ -267,9 +269,9 @@ Tasks:
    - For patterns, identify design patterns used: repository pattern, dependency injection, observer, factory, etc.
    - The change summary should be readable by someone who hasn't seen the code — explain what was accomplished, not implementation details
 
-4. **Update plan.md**: Check off completed tasks (`- [x]`).
+5. **Update plan.md**: Check off completed tasks (`- [x]`).
 
-5. **Report progress**: After each step, output a brief summary: step number, agent name, files changed, validation result.
+6. **Report progress**: After each step, output a brief summary: step number, agent name, files changed, validation result.
 
 ## Phase 5: Code Review
 
