@@ -211,7 +211,27 @@ func (a *App) SaveFileContent(filePath string, content string) error {
 	return os.WriteFile(absPath, []byte(content), 0644)
 }
 
-func (a *App) CancelFeature(featureID string) error {
+func (a *App) CancelFeature(featureID string, revertChanges bool) error {
+	if revertChanges {
+		// Collect all changed files and revert them
+		steps, err := a.artifactStore.LoadSteps(featureID)
+		if err == nil {
+			for _, step := range steps {
+				for _, f := range step.ChangeMap.Files {
+					if f.Category == "add" {
+						// Remove added files
+						os.Remove(filepath.Join(a.projectRoot, f.Path))
+					} else {
+						// Revert modified/deleted files to base commit state
+						feature, err := a.artifactStore.LoadFeature(featureID)
+						if err == nil {
+							git.RevertFile(a.projectRoot, feature.BaseCommit, f.Path)
+						}
+					}
+				}
+			}
+		}
+	}
 	return a.artifactStore.UpdateFeatureStatus(featureID, artifacts.StatusCancelled)
 }
 

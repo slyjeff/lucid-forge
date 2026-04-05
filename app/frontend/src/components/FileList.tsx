@@ -144,6 +144,7 @@ export function FileList({
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                  textDecoration: file.category === "delete" ? "line-through" : "none",
                 }}
                 title={file.path}
               >

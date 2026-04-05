@@ -101,6 +101,64 @@ You are the general agent.
 	}
 }
 
+func TestParseAgentFile_MissingClosingFrontmatter(t *testing.T) {
+	// Arrange
+	content := "---\nname: Bad\n"
+
+	// Act
+	_, err := ParseAgentFile(content, "bad.md")
+
+	// Assert
+	if err == nil {
+		t.Fatal("expected error for missing closing frontmatter")
+	}
+}
+
+func TestParseAgentFile_NoDirectoriesSection(t *testing.T) {
+	// Arrange
+	content := "---\nname: Minimal\nmodel: claude-sonnet-4-6\nlucidforge: true\n---\n\nJust identity.\n"
+
+	// Act
+	agent, err := ParseAgentFile(content, "lf-minimal.md")
+
+	// Assert
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(agent.Directories) != 0 {
+		t.Errorf("expected 0 directories, got %d", len(agent.Directories))
+	}
+}
+
+func TestSerializeAgent_EmptyFieldsRoundTrip(t *testing.T) {
+	// Arrange
+	agent := &Agent{
+		Name:         "Empty",
+		Model:        "claude-sonnet-4-6",
+		LucidForge:   true,
+		Identity:     "",
+		Directories:  []string{"src/"},
+		Instructions: "",
+		Learnings:    "",
+		Filename:     "lf-empty.md",
+	}
+
+	// Act
+	serialized := SerializeAgent(agent)
+	reparsed, err := ParseAgentFile(serialized, "lf-empty.md")
+
+	// Assert
+	if err != nil {
+		t.Fatalf("reparse error: %v", err)
+	}
+	if reparsed.Instructions != "" {
+		t.Errorf("expected empty instructions, got %q", reparsed.Instructions)
+	}
+	if reparsed.Learnings != "" {
+		t.Errorf("expected empty learnings, got %q", reparsed.Learnings)
+	}
+}
+
 func TestParseAgentFile_MissingFrontmatter(t *testing.T) {
 	// Arrange
 	content := "# Just a markdown file\nNo frontmatter here."

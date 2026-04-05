@@ -137,9 +137,17 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
               fontFamily: "var(--font-mono)",
               fontSize: "var(--code)",
               flex: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
             }}
           >
             {selectedFile}
+            {matchedDiff && !matchedDiff.isDeleted && (
+              <span style={{ color: "var(--text-dim)", fontSize: "var(--label)", fontFamily: "var(--font-ui)" }}>
+                (editable)
+              </span>
+            )}
           </span>
           {isModified && (
             <>
@@ -205,6 +213,22 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
             Search
           </button>
         </div>
+
+        {/* Deleted file indicator */}
+        {matchedDiff?.isDeleted && (
+          <div
+            style={{
+              padding: "var(--space-sm) var(--space-lg)",
+              background: "var(--error-subtle)",
+              borderBottom: "1px solid var(--border)",
+              color: "var(--error)",
+              fontSize: "var(--label)",
+              fontWeight: "var(--weight-semibold)",
+            }}
+          >
+            This file was deleted
+          </div>
+        )}
 
         {/* Reasoning */}
         {currentFile?.reasoning && (

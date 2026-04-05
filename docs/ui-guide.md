@@ -4,7 +4,7 @@ Screen layout, navigation flow, and data mapping for the LucidForge Wails app (G
 
 ## Navigation
 
-The app has a flat navigation model — a top-level route determines which page is shown. No nested routers.
+The app has a flat navigation model — a top-level route determines which page is shown.
 
 ```
 App Launch
@@ -13,8 +13,8 @@ App Launch
        │    ├─ Discovery tab
        │    ├─ UX Design tab (if present)
        │    ├─ Plan tab
-       │    ├─ Steps tab (with sub-navigation per step)
-       │    └─ Review Issues tab (if present)
+       │    ├─ AI Review Notes tab (if review issues exist)
+       │    └─ Review tab (if steps exist)
        └─ Agent Management
 ```
 
@@ -24,273 +24,201 @@ Three pages total. The feature review page has internal tab navigation but is a 
 
 ### 1. Feature List (Home)
 
-The landing page. Lists all features from `.lucidforge/features/`.
+The landing page. Lists all reviewable features from `.lucidforge/features/`. Shows a subtle LucidForge logo watermark in the background.
 
 **Layout:**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  LucidForge                              [Agents]       │
+│  [C:\path\to\project]                        [Agents]   │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐    │
-│  │ Add User Authentication                         │    │
-│  │ user-review · 5 steps · $0.45 · Apr 4, 2026    │    │
+│  │ Add User Authentication              ✔ ✖       │    │
+│  │ user-review · 5 steps                           │    │
+│  │ JWT-based authentication with login/register    │    │
 │  └─────────────────────────────────────────────────┘    │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │ Refactor Billing Module                         │    │
-│  │ approved · 3 steps · $0.28 · Apr 2, 2026       │    │
+│  │ approved · 3 steps                              │    │
+│  │ Restructure billing service for multi-tenant    │    │
 │  └─────────────────────────────────────────────────┘    │
-│                                                         │
-│  No in-progress features. Run the lucidforge skill      │
-│  to start a new feature.                                │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
 **Data:**
-- `GetFeatures()` → list of features with status, cost, step count, date
+- `GetFeatures()` → list of features with status and step count
 - Only shows features with status `user-review`, `approved`, or `cancelled`
-- Click a feature → navigate to Feature Review
+- Click a feature card → navigate to Feature Review
 - [Agents] button → navigate to Agent Management
+- Project path button → open directory picker to switch projects
 
 **Feature card contents:**
 - Feature name (bold)
-- Status badge (colored: gold for user-review, green for approved, dim for cancelled)
+- Status badge (colored: gold for user-review, green for approved, red for cancelled)
 - Step count
-- Total cost
-- Creation date
+- Description
+- ✔ commit button and ✖ cancel button (only for `user-review` features, with hover effects)
+
+**Actions:**
+- ✔ Commit: opens a dialog to enter a commit message, then stages all changed files and creates a single commit
+- ✖ Cancel: confirmation dialog, marks feature as cancelled
+
+**Project persistence:** The app remembers the last opened project and reopens it on next launch.
+
+**Auto-refresh:** The feature list auto-refreshes when `.lucidforge/features/` changes on disk (via fsnotify).
 
 ### 2. Feature Review
 
-The core experience. One page with tabs for the full review flow.
+The core review experience. One page with tabs for the full review flow.
 
 **Layout:**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  ← Features    Add User Authentication         $0.45   │
+│  ← Features    Add User Authentication                  │
 ├─────────────────────────────────────────────────────────┤
-│  [Discovery] [UX Design] [Plan] [Steps] [Issues]       │
+│  [Discovery] [UX Design] [Plan] [AI Review Notes] [Review]│
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │                   (tab content)                         │
 │                                                         │
-├─────────────────────────────────────────────────────────┤
-│  [Cancel Feature]                    [Approve Feature]  │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Header:** Back button, feature name, total cost
-**Footer:** Cancel and Approve actions (approve creates single commit on source branch)
-**Tabs:** Discovery, UX Design (conditional on `hasUxDesign`), Plan, Steps, Issues (conditional on `review.json` existing)
+**Header:** Back button and feature name
+**Tabs:** Discovery, UX Design (conditional), Plan, AI Review Notes (conditional), Review (conditional)
+
+When steps exist, the page opens directly to the Review tab. Otherwise it opens to Discovery.
 
 #### Discovery Tab
 
-Renders `discovery.md` as formatted markdown.
+Renders `discovery.md` as formatted markdown with styled headings, code blocks, tables, and blockquotes.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│  ## Overview                                            │
-│  JWT-based authentication with login and register       │
-│  endpoints for the REST API...                          │
-│                                                         │
-│  ## Requirements                                        │
-│  - Bcrypt password hashing                              │
-│  - JWT tokens with configurable expiry                  │
-│  - Token revocation support                             │
-│  ...                                                    │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Data:** `GetFeature(id)` → read `discovery.md` content, render with react-markdown
+**Data:** `GetDiscovery(featureId)` → markdown string rendered with react-markdown + remark-gfm
 
 #### UX Design Tab
 
-Renders `ux.md` as formatted markdown. Shows "Open Mockup" buttons for any referenced HTML files.
+Renders `ux.md` as formatted markdown. Shows clickable mockup cards that open HTML files in the system browser.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│  ## User Flows                                          │
-│  1. User visits /login...                               │
-│                                                         │
-│  ## Mockups                                             │
-│  ┌──────────────────────┐  ┌──────────────────────┐    │
-│  │ login-page.html      │  │ dashboard.html       │    │
-│  │ [Open in Browser]    │  │ [Open in Browser]    │    │
-│  └──────────────────────┘  └──────────────────────┘    │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Data:** Read `ux.md` content + list `mockups/*.html` files. "Open in Browser" opens the file via system default browser.
+**Data:** `GetUxDesign(featureId)` + `GetMockups(featureId)` → markdown + list of HTML filenames
 
 #### Plan Tab
 
-Renders `plan.md` as formatted markdown with task checkboxes visible.
+Renders `plan.md` as formatted markdown with GFM task checkboxes.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│  ## Step 1: Backend API — Auth Models and Database      │
-│  Agent: backend-api                                     │
-│  Files: src/models/User.cs, src/models/AuthToken.cs,   │
-│         src/data/DbContext.cs                           │
-│                                                         │
-│  Tasks:                                                 │
-│  ☑ Create User entity with email, password hash...     │
-│  ☑ Create AuthToken entity with token value...         │
-│  ☑ Register entities in DbContext and add migration    │
-│                                                         │
-│  ## Step 2: Backend API — Auth Service                  │
-│  ...                                                    │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
+**Data:** `GetPlan(featureId)` → markdown string
 
-**Data:** Read `plan.md` content, render with react-markdown (checkboxes are standard GFM)
+#### AI Review Notes Tab
 
-#### Steps Tab
+Shows code review issues from `review.json`. Only present if review.json exists and has issues.
 
-The most complex tab. Two-panel layout: step list sidebar + step detail area.
-
-```
-┌──────────────────┬──────────────────────────────────────┐
-│ Steps            │  Step 1: Auth Models     backend-api │
-│                  │                                      │
-│ ● Step 1    3/3 │  [Insights] [Diff] [Map]             │
-│ ○ Step 2    0/4 │ ─────────────────────────────────────│
-│ ○ Step 3    0/2 │                                      │
-│ ○ Step 4    0/5 │         (sub-tab content)            │
-│ ○ Step 5    0/3 │                                      │
-│                  │                                      │
-│                  │                                      │
-│                  │                                      │
-│                  │                                      │
-└──────────────────┴──────────────────────────────────────┘
-```
-
-**Step sidebar:**
-- List of steps with order, agent name, and viewed file count ("3/3")
-- Filled circle (●) for steps with all files viewed, empty (○) otherwise
-- Click to select step
-- Sidebar is resizable (180px default, 120–300px range)
-
-**Step detail header:** Step title, agent name badge
-
-**Step sub-tabs:**
-
-**Insights sub-tab:**
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Change Summary                                          │
-│  Added User and AuthToken entities with EF Core          │
-│  registration. User stores email and bcrypt password     │
-│  hash with audit timestamps...                           │
-│                                                          │
-│  Patterns                                                │
 │  ┌────────────────────────────────────────────────┐      │
-│  │ Entity Framework Code First                    │      │
-│  │ New entities registered via DbSet properties   │      │
+│  │ ⚠ WARNING · Step 1 · backend-api      Fixed   │      │
+│  │ JWT secret is hardcoded. Should be loaded      │      │
+│  │ from configuration.                            │      │
+│  │ src/services/AuthService.cs                    │      │
 │  └────────────────────────────────────────────────┘      │
-│                                                          │
-│  Tasks                                                   │
-│  ☑ Create User entity with email, password hash...      │
-│  ☑ Create AuthToken entity with token value...          │
-│  ☑ Register entities in DbContext and add migration     │
-│                                                          │
-│  Validation: ✓ Passed                                    │
-│  Tokens: 17K (12K in · 5K out) · $0.08                  │
 └──────────────────────────────────────────────────────────┘
 ```
+
+- Issue cards with severity badge (error/warning/info, colored), step/agent reference, description, file path
+- Fixed indicator for auto-fixed issues
+
+#### Review Tab
+
+The most complex tab. Step selector dropdown + sub-tabs for Insights, Diff, and Map.
+
+**Layout:**
+```
+┌──────────────────────────────────────────────────────────┐
+│  [Auth Models and Database ▾]           backend-api      │
+│  [Insights] [Diff] [Map]                                 │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│                   (sub-tab content)                       │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Step selector:** Dropdown showing step titles. Agent name badge next to it.
+
+**Insights sub-tab:**
+- Change summary (natural language)
+- Design patterns identified (cards with name and description)
 
 **Diff sub-tab:**
 ```
 ┌────────────────────┬─────────────────────────────────────┐
-│ Files         3/3  │  src/models/User.cs          [✓]   │
+│ Files         2/5  │  src/models/User.cs                 │
+│                    │  [▲] [▼] [Side-by-Side] [□ Hide ws] │
+│ ○ A User.cs       │  [Mark Viewed] [Search]              │
+│ ✓ A AuthToken.cs  │ ────────────────────────────────────│
+│ ○ M DbContext.cs  │  ▼ Why this file was added           │
+│                    │  New entity needed for user          │
+│                    │  identity. Stores email and...       │
 │                    │ ────────────────────────────────────│
-│ ✓ User.cs         │  ▼ Why this file changed            │
-│ ✓ AuthToken.cs    │  New entity needed for user          │
-│ ✓ DbContext.cs    │  identity. Stores email and...       │
-│                    │ ────────────────────────────────────│
-│                    │   1  + using System;                │
-│                    │   2  +                              │
-│                    │   3  + public class User {          │
-│                    │   4  +     public string Email...   │
-│                    │   5  +     public string Password.. │
-│                    │   ...                               │
 │                    │                                     │
-│                    │   [Unified ▾]  [Hide Whitespace]    │
+│                    │    (Monaco editor / diff viewer)     │
+│                    │                                     │
 └────────────────────┴─────────────────────────────────────┘
 ```
 
-- **File list panel** (resizable, 220px default): file names with viewed checkmarks, header shows "Files 2/3"
-- **Diff panel**: file header with name and viewed checkbox, collapsible "Why this file changed" reasoning panel, diff content (Monaco Editor or diff2html), unified/side-by-side toggle, hide whitespace toggle
-- Clicking a file in the list loads its diff
-- Viewed checkbox toggles persist to step artifact file (`viewedFiles`)
-- New files show syntax-highlighted content without diff markers
-- Deleted files show with "(deleted)" header
+- **File list panel:** file names with viewed indicator (✓/○), category badge (A=add, M=modify, D=delete), header with viewed count
+- **Toolbar:** file path, prev/next change buttons (▲/▼, for modified files only), side-by-side/unified toggle, hide whitespace checkbox, mark viewed button, search button
+- **Reasoning panel:** collapsible, shows context-aware label ("Why this file was added/deleted/changed")
+- **Editor:** Monaco-based, always editable for new and modified files with debounced auto-save (500ms)
+
+**Diff behavior:**
+- New files: single Monaco editor (editable, no diff)
+- Deleted files: single Monaco editor (read-only)
+- Modified files: Monaco DiffEditor (side-by-side or unified, editable right side)
+- On file select, scrolls to center the first change
+- Next/prev buttons navigate between changes, centering the full change range
+
+**Editing:** Files are always editable (new and modified, not deleted). Changes auto-save to disk after 500ms of no typing. No explicit save button needed.
+
+**Viewed tracking:**
+- Click the ○/✓ indicator in the file list to toggle viewed state
+- Marking as viewed auto-advances to the next unviewed file (wraps around)
+- Unmarking as viewed stays on the current file
+- Viewed state persists to the step artifact file (`viewedFiles` array)
+
+**Settings persistence:** Side-by-side vs unified mode and hide whitespace preference persist in localStorage across sessions.
 
 **Map sub-tab:**
-```
-┌──────────────────────────────────────────────────────────┐
-│                                                          │
-│   ┌───────────────┐         ┌───────────────┐           │
-│   │ User.cs       │         │ AuthToken.cs  │           │
-│   │ ─────────     │ foreign │ ─────────     │           │
-│   │ C User        │◄── key ─│ C AuthToken   │           │
-│   │ P Email       │         │ P Token       │           │
-│   │ P PasswordHash│         │ P ExpiresAt   │           │
-│   │ P CreatedAt   │         │ P UserId      │           │
-│   └───────────────┘         └───────────────┘           │
-│           ▲                         ▲                    │
-│           │ entity reg.             │ entity reg.        │
-│   ┌───────────────┐                                     │
-│   │ DbContext.cs  │                                     │
-│   │ ─────────     │                                     │
-│   │ P Users       │                                     │
-│   │ P AuthTokens  │                                     │
-│   └───────────────┘                                     │
-│                                                          │
-│  Interactive: drag, zoom, hover to highlight connections │
-└──────────────────────────────────────────────────────────┘
-```
 
-- File boxes with header (file name, change category color) and member list
-- Member badges: type initial (C=class, P=property, M=method, etc.)
-- Connection lines between related files/members with relationship labels
-- Hover a file box → highlight its connections
-- Click a file box → navigate to that file's diff
-- Pan and zoom support (D3 or React Flow)
-
-#### Issues Tab
-
-Shows code review issues from `review.json`. Only present if review.json exists.
+Files grouped by directory in bordered boxes. Hover to see connections.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  2 issues (1 fixed, 1 unfixed)                           │
+│  ┌─ src/models/ ─────────────────────────────────┐       │
+│  │  ┌───────────────┐  ┌───────────────┐         │       │
+│  │  │ User.cs       │  │ AuthToken.cs  │         │       │
+│  │  │ C User        │  │ C AuthToken   │         │       │
+│  │  │ P Email       │  │ P Token       │         │       │
+│  │  │ P PasswordHash│  │ P UserId      │         │       │
+│  │  └───────────────┘  └───────────────┘         │       │
+│  └───────────────────────────────────────────────┘       │
+│  ┌─ src/data/ ───────────────────────────────────┐       │
+│  │  ┌───────────────┐                            │       │
+│  │  │ DbContext.cs  │                            │       │
+│  │  │ P Users       │                            │       │
+│  │  │ P AuthTokens  │                            │       │
+│  │  └───────────────┘                            │       │
+│  └───────────────────────────────────────────────┘       │
 │                                                          │
-│  ┌────────────────────────────────────────────────┐      │
-│  │ ⚠ WARNING · Step 1 · backend-api          ✓   │      │
-│  │ src/services/AuthService.cs                    │      │
-│  │ JWT secret is hardcoded. Should be loaded      │      │
-│  │ from configuration.                            │      │
-│  └────────────────────────────────────────────────┘      │
-│  ┌────────────────────────────────────────────────┐      │
-│  │ ℹ INFO · Step 3 · frontend                     │      │
-│  │ src/components/LoginForm.tsx                    │      │
-│  │ Consider adding aria-label to the submit       │      │
-│  │ button for screen reader accessibility.        │      │
-│  └────────────────────────────────────────────────┘      │
-│                                                          │
+│  Hover a file → dashed blue lines show connections       │
+│  with relationship labels. Unconnected files dim.        │
 └──────────────────────────────────────────────────────────┘
 ```
 
-- Issue cards with severity badge (colored), step/agent reference, file path, description
-- Fixed indicator (✓ green checkmark) for auto-fixed issues
-- Click file path → navigate to that file's diff in the Steps tab
+- Files grouped by directory
+- File boxes with header (file name, category-colored border) and member list
+- Member badges: type initial (C=class, P=property, M=method, etc.) with kind-colored background
+- Hover a file → dashed blue connection lines appear to related files with relationship labels at midpoint
+- Unconnected files dim to 35% opacity
 
 ### 3. Agent Management
 
@@ -299,100 +227,53 @@ Full management UI for LucidForge agents.
 **Layout:**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  ← Features    Agents                      [+ New]      │
+│  ← Features    Agents                      [+ New Agent]│
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │ Backend API                    claude-sonnet-4-6│    │
 │  │ Senior backend engineer                         │    │
 │  │ src/api/ · src/services/                        │    │
-│  │                              [Merge] [Delete]   │    │
-│  └─────────────────────────────────────────────────┘    │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │ Frontend                      claude-sonnet-4-6 │    │
-│  │ Frontend developer                              │    │
-│  │ src/components/ · src/pages/                     │    │
-│  │                              [Merge] [Delete]   │    │
+│  │ [Edit] [Merge] [Delete]                         │    │
 │  └─────────────────────────────────────────────────┘    │
 │  ┌─────────────────────────────────────────────────┐    │
 │  │ General                       claude-sonnet-4-6 │    │
 │  │ Cross-cutting code                              │    │
-│  │ (catch-all)                                     │    │
-│  │                              [Merge]            │    │
+│  │ [Edit] [Merge]                                  │    │
 │  └─────────────────────────────────────────────────┘    │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Agent list:** cards showing name, model, identity, directories. General agent cannot be deleted.
+**Agent cards:** name, model badge, identity, directory tags, action buttons (Edit, Merge, Delete). General agent cannot be deleted.
 
-**Click an agent card → expand to editor:**
-```
-┌─────────────────────────────────────────────────────────┐
-│  Backend API                                            │
-│                                                         │
-│  Name:        [Backend API                         ]    │
-│  Description: [Handles API layer and services      ]    │
-│  Model:       [claude-sonnet-4-6              ▾]        │
-│  Identity:    [Senior backend engineer             ]    │
-│  Directories: [src/api/] [src/services/] [+ Add]        │
-│                                                         │
-│  Instructions                                           │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │ - Use dependency injection for all service      │    │
-│  │   dependencies                                  │    │
-│  │ - All endpoints return standard API response    │    │
-│  │   wrappers                                      │    │
-│  └─────────────────────────────────────────────────┘    │
-│                                                         │
-│  Learnings (read-only)                                  │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │ - The PaymentsService uses gRPC, not REST       │    │
-│  │ - Rate limiting is handled at the gateway       │    │
-│  └─────────────────────────────────────────────────┘    │
-│                                                         │
-│  [Save]                            [Cancel]             │
-└─────────────────────────────────────────────────────────┘
-```
+**Agent editor:** Inline form with name (new only), description, model dropdown, identity textarea, directories (tag input with add/remove), instructions textarea, learnings (read-only display).
 
-**Agent editor fields:**
-- Name (text input)
-- Description (text input)
-- Model (dropdown: available Claude models)
-- Identity (text input — the persona string)
-- Directories (tag list with add/remove)
-- Instructions (textarea — editable markdown)
-- Learnings (read-only display — accumulated by post-approval hook)
-- Save writes changes back to the `.md` file
-- Cancel discards edits
+**Merge flow:** Modal with target agent dropdown, confirm merges directories (deduped), instructions, and learnings into target and deletes source.
 
-**Merge flow:**
-1. Click [Merge] on source agent
-2. Modal: "Merge into which agent?" — dropdown of other agents
-3. Preview: shows what will be combined (directories, instructions, learnings)
-4. Confirm → source deleted, target updated
-
-**Delete flow:**
-1. Click [Delete] on agent
-2. Confirmation dialog: "Delete Backend API? This cannot be undone."
-3. Confirm → `.md` file removed
-
-**New agent flow:**
-1. Click [+ New] in header
-2. Empty editor form appears (same as edit, but all fields blank)
-3. Name and at least one directory required
-4. Save creates new `.md` file with `lucidforge: true` frontmatter
+**Delete flow:** Confirmation dialog, removes the `.md` file.
 
 ## Wails Bindings ↔ UI Mapping
 
 | Page / Action | Go Backend Method | Data |
 |---|---|---|
 | Feature list | `GetFeatures()` | `[]Feature` |
-| Feature review | `GetFeature(id)` | `*Feature` + markdown file contents |
+| Feature review | `GetFeature(id)` | `*Feature` |
+| Discovery content | `GetDiscovery(featureId)` | markdown string |
+| UX design content | `GetUxDesign(featureId)` | markdown string |
+| Plan content | `GetPlan(featureId)` | markdown string |
+| Mockup list | `GetMockups(featureId)` | `[]string` |
+| Open mockup | `OpenMockup(featureId, filename)` | opens in browser |
+| Review issues | `GetReview(featureId)` | `*Review` |
 | Step list | `GetSteps(featureId)` | `[]Step` |
 | File diff | `GetDiff(featureId, stepOrder, filePath)` | `*FileDiff` |
 | Mark file viewed | `MarkFileViewed(featureId, stepOrder, filePath)` | writes to step JSON |
-| Approve feature | `ApproveFeature(featureId, commitMessage)` | git commit |
+| Unmark file viewed | `UnmarkFileViewed(featureId, stepOrder, filePath)` | writes to step JSON |
+| Save file edit | `SaveFileContent(filePath, content)` | writes to working tree |
+| Commit feature | `ApproveFeature(featureId, commitMessage)` | git add + commit |
+| Cancel feature | `CancelFeature(featureId)` | updates status |
+| Select project | `SelectProjectRoot()` | directory picker |
+| Get project root | `GetProjectRoot()` | current path |
 | Agent list | `GetAgents()` | `[]Agent` |
 | Agent detail | `GetAgent(name)` | `*Agent` |
 | Save agent | `SaveAgent(agent)` | writes to `.md` file |
@@ -405,10 +286,12 @@ Full management UI for LucidForge agents.
 **Persisted to artifact files (survives app restarts):**
 - `viewedFiles` in step JSON — which files the user has marked as reviewed
 
-**Persisted to local app storage (user preferences):**
+**Persisted to localStorage (user preferences):**
 - Diff mode: unified vs side-by-side
 - Hide whitespace toggle
-- Reasoning panel expanded/collapsed
+
+**Persisted to app preferences (across sessions):**
+- Last opened project root
 
 **In-memory only (resets on page change):**
 - Selected step
@@ -416,8 +299,12 @@ Full management UI for LucidForge agents.
 - Selected sub-tab (Insights/Diff/Map)
 - Scroll positions
 
+## Auto-Refresh
+
+The app watches `.lucidforge/features/` for changes using fsnotify and emits Wails events to trigger React re-fetches. This supports the primary workflow: skill running in one terminal while the app is open. Only the initial page load shows a loading state — refetches update data silently without disrupting the UI.
+
 ## Responsive Behavior
 
-The app targets a minimum window size of 1024x768. The two resizable panels in the Steps tab (step sidebar, file list) use drag handles. All other layout is flexbox-based and fills available space.
+The app targets a minimum window size of 1024x768. All layout is flexbox-based and fills available space.
 
 No mobile support — this is a desktop app via Wails.

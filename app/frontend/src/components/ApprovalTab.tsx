@@ -31,7 +31,7 @@ export function ApprovalTab({ feature, featureId }: ApprovalTabProps) {
 
   async function handleCancel() {
     try {
-      await CancelFeature(featureId);
+      await CancelFeature(featureId, false);
       setShowCancel(false);
       setActionError(null);
       navigate("/");

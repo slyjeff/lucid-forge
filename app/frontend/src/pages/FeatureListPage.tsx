@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useFeatures } from "../hooks/useFeatures";
 import { GetProjectRoot, SelectProjectRoot, ApproveFeature, CancelFeature } from "../../wailsjs/go/main/App";
 import { ApproveDialog } from "../components/ApproveDialog";
-import { ConfirmDialog } from "../components/ConfirmDialog";
+import { Dialog } from "../components/Dialog";
 import logo from "../assets/lucidforge-logo.png";
 import type { Feature } from "../types";
 
@@ -175,9 +175,9 @@ export function FeatureListPage() {
     }
   }
 
-  async function handleCancel() {
+  async function handleCancel(revertChanges: boolean) {
     if (cancelling) {
-      await CancelFeature(cancelling.id);
+      await CancelFeature(cancelling.id, revertChanges);
       setCancelling(null);
       refetch();
     }
@@ -286,15 +286,78 @@ export function FeatureListPage() {
         />
       )}
       {cancelling && (
-        <ConfirmDialog
-          open={true}
-          title="Cancel Feature"
-          message={`Cancel "${cancelling.name}"? Code changes remain on the working branch but will not be committed.`}
-          confirmLabel="Cancel Feature"
-          danger
-          onClose={() => setCancelling(null)}
-          onConfirm={handleCancel}
-        />
+        <Dialog open={true} onClose={() => setCancelling(null)}>
+          <h2
+            style={{
+              fontSize: "var(--title)",
+              fontWeight: "var(--weight-semibold)",
+              marginBottom: "var(--space-lg)",
+            }}
+          >
+            Cancel "{cancelling.name}"
+          </h2>
+          <p style={{ color: "var(--text-secondary)", marginBottom: "var(--space-xl)" }}>
+            What should happen to the code changes?
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+            <button
+              onClick={() => handleCancel(false)}
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius)",
+                padding: "var(--space-md) var(--space-lg)",
+                color: "var(--text-primary)",
+                cursor: "pointer",
+                textAlign: "left",
+                fontSize: "var(--body)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+            >
+              <div style={{ fontWeight: "var(--weight-semibold)", marginBottom: 2 }}>Keep changes</div>
+              <div style={{ color: "var(--text-secondary)", fontSize: "var(--label)" }}>
+                Mark as cancelled but leave files as-is in the working tree
+              </div>
+            </button>
+            <button
+              onClick={() => handleCancel(true)}
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius)",
+                padding: "var(--space-md) var(--space-lg)",
+                color: "var(--text-primary)",
+                cursor: "pointer",
+                textAlign: "left",
+                fontSize: "var(--body)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--error)")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+            >
+              <div style={{ fontWeight: "var(--weight-semibold)", color: "var(--error)", marginBottom: 2 }}>Revert changes</div>
+              <div style={{ color: "var(--text-secondary)", fontSize: "var(--label)" }}>
+                Mark as cancelled and revert all modified files to their original state
+              </div>
+            </button>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "var(--space-lg)" }}>
+            <button
+              onClick={() => setCancelling(null)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--text-secondary)",
+                padding: "6px 10px",
+                cursor: "pointer",
+                borderRadius: "var(--radius-md)",
+                fontSize: "var(--body)",
+              }}
+            >
+              Never mind
+            </button>
+          </div>
+        </Dialog>
       )}
     </div>
   );
