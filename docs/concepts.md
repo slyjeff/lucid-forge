@@ -35,9 +35,22 @@ The skill and readers never talk to each other. They communicate through the fil
 
 ## Agents
 
-In Claude Code, agents are defined as `.claude/agents/*.md` files — a system prompt with optional metadata. The LucidForge skill uses these as the specialized workers for each step.
+In Claude Code, agents are defined as `.claude/agents/*.md` files — a system prompt with optional metadata. LucidForge uses two kinds of agents:
 
-LucidForge agents are marked with `lucidforge: true` in their frontmatter to distinguish them from other Claude Code agents in the project:
+### Orchestration agents
+
+Four fixed-purpose agents handle the structured phases of the workflow. They are always the same regardless of project and are named with the `lf-` prefix:
+
+- **`lf-discovery`** — explores the codebase, asks clarifying questions, writes `discovery.md`
+- **`lf-planning`** — reads the discovery document and available execution agents, writes `plan.md`
+- **`lf-verification`** — runs build and test commands after each step, reports pass/fail
+- **`lf-documentation`** — scans for existing docs, updates what's stale, writes the documentation step artifact
+
+Orchestration agents do **not** have `lucidforge: true`. They never get assigned execution steps and don't appear in the planning agent pool or the reader's agent management UI. They accumulate `## Learnings` over time, just like execution agents.
+
+### Execution agents
+
+Project-specific agents that map to the project's architectural boundaries and do the actual code changes. They are marked with `lucidforge: true`:
 
 ```markdown
 ---
@@ -61,17 +74,17 @@ You are a senior backend engineer. You own the API layer.
 - Rate limiting is handled at the gateway, not in service code
 ```
 
-The `lucidforge: true` marker lets readers filter to only LucidForge agents and lets the skill know which agents are available for step assignment. A project can have other Claude Code agents for non-LucidForge purposes — they won't appear in the LucidForge UI.
+The `lucidforge: true` marker lets readers filter to only execution agents and lets the planning phase know which agents are available for step assignment. A project can have other Claude Code agents for non-LucidForge purposes — they won't appear in the LucidForge UI.
 
 ### Agent generation
 
-A separate `lucidforge-agents` skill scans the project structure and generates LucidForge agent files. It analyzes directory layout, language/framework usage, and code organization to recommend agents with appropriate names, descriptions, directory scopes, and identities. Users run this skill once to bootstrap, then edit agents through the reader's UI or directly in the markdown files.
+The `lucidforge-agents` skill generates both kinds of agents. It always generates the 4 orchestration agents first, then analyzes the project structure to recommend execution agents. If only the orchestration agents are missing (e.g., a new install), it creates just those without touching existing execution agents.
 
-The main `lucidforge` skill checks for LucidForge agents before starting and prompts the user to run `lucidforge-agents` if none exist.
+The `lucidforge` skill pre-flight checks for all 4 orchestration agents by filename and for at least one execution agent by `lucidforge: true` frontmatter. If either is missing, it prompts the user to run `lucidforge-agents`.
 
 ### Agent management in readers
 
-Readers provide a full management UI for LucidForge agents (files with `lucidforge: true`):
+Readers provide a full management UI for execution agents (files with `lucidforge: true`). Orchestration agents are not shown here — they are managed through the skill.
 
 - **Add**: create a new agent with name, description, directories, identity, and model. The reader writes a new `.md` file to `.claude/agents/` with `lucidforge: true` frontmatter.
 - **Edit**: modify any agent field — name, description, model, identity, directories, instructions. Changes are written back to the `.md` file.

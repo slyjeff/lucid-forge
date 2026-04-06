@@ -33,8 +33,14 @@ lucidforge/
 ├── skill/
 │   ├── lucidforge/
 │   │   └── SKILL.md               # feature orchestration skill
-│   └── lucidforge-agents/
-│       └── SKILL.md               # agent generation skill
+│   ├── lucidforge-agents/
+│   │   └── SKILL.md               # agent generation skill (orchestration + execution agents)
+│   ├── lucidforge-change/
+│   │   └── SKILL.md               # targeted change + step artifact update skill
+│   ├── lucidforge-commit/
+│   │   └── SKILL.md               # approval, commit, and learnings extraction skill
+│   └── lucidforge-cancel/
+│       └── SKILL.md               # cancel and optional revert skill
 ├── app/                            # Wails desktop app
 │   ├── main.go                     # Wails entry point
 │   ├── app.go                      # Go backend: artifact reading, git, approval

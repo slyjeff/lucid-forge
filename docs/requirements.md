@@ -20,14 +20,15 @@ A well-defined file format (JSON + markdown) that captures everything a reviewer
 
 Two skills that work together:
 
-**`lucidforge-agents`** — scans the project structure and generates specialized agent files (`.claude/agents/*.md` with `lucidforge: true`). Run once to bootstrap a project, or re-run when the project structure changes. Preserves user-edited instructions and learnings.
+**`lucidforge-agents`** — generates two kinds of agents. Always generates the 4 fixed orchestration agents (`lf-discovery`, `lf-planning`, `lf-verification`, `lf-documentation`), then scans the project structure to generate project-specific execution agents (`.claude/agents/*.md` with `lucidforge: true`). Run once to bootstrap, or re-run when the project structure changes. Preserves user-edited instructions and learnings. If only orchestration agents are missing, creates just those without touching execution agents.
 
-**`lucidforge`** — orchestrates feature development through structured steps:
+**`lucidforge`** — orchestrates feature development through structured phases, each delegated to a specialized orchestration agent:
 
-- **Discovery**: explores the codebase, asks clarifying questions, produces a feature description
-- **Planning**: breaks the feature into ordered steps, each assigned to a LucidForge agent
-- **Execution**: spawns the assigned agent for each step, runs build/test validation between steps, writes structured artifact files capturing what changed and why
-- **Code review**: reviews the generated code and auto-fixes issues
+- **Discovery**: spawns `lf-discovery` to explore the codebase, ask clarifying questions, and produce `discovery.md`
+- **Planning**: spawns `lf-planning` to break the feature into ordered steps assigned to execution agents, producing `plan.md`
+- **Execution**: spawns the assigned execution agent for each step; spawns `lf-verification` after each step for build/test validation; writes structured artifact files capturing what changed and why
+- **Code review**: reviews the generated code, auto-fixes issues, spawns `lf-verification` to confirm fixes pass
+- **Documentation**: spawns `lf-documentation` to update project docs and write the documentation step artifact
 
 ### 3. Readers (Consumers)
 
@@ -43,24 +44,27 @@ Each reader is a separate project in a separate repo. They share no code. They s
 
 ### Agent Skill (`lucidforge-agents`)
 
-- FR-A1: Scan the project structure (directories, languages, frameworks, code organization)
-- FR-A2: Recommend a set of LucidForge agents with names, descriptions, directory scopes, identities, and model preferences
-- FR-A3: Write agent files to `.claude/agents/` with `lucidforge: true` frontmatter
-- FR-A4: Preserve existing LucidForge agents — update descriptions and directories if the project structure has changed, but don't overwrite user-edited instructions or learnings
-- FR-A5: Leave non-LucidForge agents (without `lucidforge: true`) untouched
+- FR-A1: Always generate the 4 orchestration agents (`lf-discovery`, `lf-planning`, `lf-verification`, `lf-documentation`) — fixed definitions, no project analysis required
+- FR-A2: If only orchestration agents are missing, create them without touching existing execution agents
+- FR-A3: Scan the project structure (directories, languages, frameworks, code organization) to design execution agents
+- FR-A4: Recommend a set of execution agents with names, descriptions, directory scopes, identities, and model preferences
+- FR-A5: Write execution agent files to `.claude/agents/` with `lucidforge: true` frontmatter; do not use the `lf-` prefix for execution agents
+- FR-A6: On refresh: rewrite orchestration agent definitions but preserve their `## Learnings`; preserve `## Instructions` and `## Learnings` for execution agents
+- FR-A7: Leave non-LucidForge agents (without `lucidforge: true` and not orchestration agents) untouched
 
 ### Feature Skill (`lucidforge`)
 
-- FR-S1: Check for LucidForge agents before starting; prompt user to run `lucidforge-agents` if none exist
-- FR-S2: Run interactive discovery conversation with the user
+- FR-S1: Check for all 4 orchestration agents by filename and at least one execution agent by `lucidforge: true`; prompt user to run `lucidforge-agents` if either is missing
+- FR-S2: Delegate discovery to `lf-discovery`; present result to user for approval
 - FR-S3: Run optional UX design phase for features with user-facing changes (produces `ux.md` and `mockups/`)
-- FR-S4: Generate a step-by-step plan with agent assignments (only assign LucidForge agents)
-- FR-S5: Execute each step by spawning the assigned Claude Code agent
-- FR-S6: Run build/test validation after each step
+- FR-S4: Delegate planning to `lf-planning`, passing only execution agents as candidates for step assignment
+- FR-S5: Execute each step by spawning the assigned execution agent
+- FR-S6: Delegate build/test validation to `lf-verification` after each step
 - FR-S7: Write a structured artifact file after each step (change map, patterns, reasoning, summary)
 - FR-S8: Run a code review pass across all steps after execution
-- FR-S9: Auto-fix review issues by dispatching to the responsible agent
-- FR-S10: Track token usage and cost per step and per feature
+- FR-S9: Auto-fix review issues by dispatching to the responsible execution agent; re-validate with `lf-verification`
+- FR-S10: Delegate documentation to `lf-documentation` after code review
+- FR-S11: Track token usage and cost per step and per feature
 
 ### Readers (Consumers)
 
