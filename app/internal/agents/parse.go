@@ -38,6 +38,7 @@ func ParseAgentFile(content string, filename string) (*Agent, error) {
 	sections := parseSections(body)
 	agent.Identity = strings.TrimSpace(sections["_identity"])
 	agent.Directories = parseList(sections["Directories"])
+	agent.Docs = parseList(sections["Docs"])
 	agent.Instructions = strings.TrimSpace(sections["Instructions"])
 	agent.Learnings = strings.TrimSpace(sections["Learnings"])
 
@@ -65,6 +66,12 @@ func SerializeAgent(agent *Agent) string {
 	b.WriteString("## Directories\n\n")
 	for _, dir := range agent.Directories {
 		b.WriteString(fmt.Sprintf("- %s\n", dir))
+	}
+	b.WriteString("\n")
+
+	b.WriteString("## Docs\n\n")
+	for _, doc := range agent.Docs {
+		b.WriteString(fmt.Sprintf("- %s\n", doc))
 	}
 	b.WriteString("\n")
 

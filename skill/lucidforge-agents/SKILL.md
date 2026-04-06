@@ -289,6 +289,9 @@ You are a {identity}. You own {description of scope}.
 - {dir1}/
 - {dir2}/
 
+## Docs
+{Empty for new agents. Populated by the user via the LucidForge app or manually. Each entry is a file path or URL the agent should read before executing a step.}
+
 ## Instructions
 {Empty for new agents. Preserved on refresh.}
 
@@ -300,7 +303,7 @@ Important:
 - The `lucidforge: true` frontmatter field is required — this is how the skill identifies execution agents to assign steps to
 - Default model to `claude-sonnet-4-6` unless the project has specific needs
 - The body text should be concise — 2-3 sentences establishing identity and scope
-- `## Instructions` and `## Learnings` sections must always be present, even if empty
+- `## Docs`, `## Instructions`, and `## Learnings` sections must always be present, even if empty
 - Do NOT modify non-LucidForge agent files (those without `lucidforge: true`)
 - Do NOT modify or overwrite the 4 orchestration agents (`lf-discovery.md`, `lf-planning.md`, `lf-verification.md`, `lf-documentation.md`)
 
@@ -339,7 +342,7 @@ When refreshing existing agents:
 1. Read each existing LucidForge execution agent file
 2. Check if directories still exist — remove stale directory references
 3. Check if new directories have appeared that aren't covered — suggest additions or new agents
-4. Preserve `## Instructions` and `## Learnings` sections exactly as they are
+4. Preserve `## Docs`, `## Instructions`, and `## Learnings` sections exactly as they are
 5. Update `description` and identity if the project has changed significantly
 6. Report what changed vs what was preserved
 

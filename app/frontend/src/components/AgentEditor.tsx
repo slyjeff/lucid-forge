@@ -17,8 +17,10 @@ export function AgentEditor({ agent, onSave, onCancel }: AgentEditorProps) {
   const [directories, setDirectories] = useState<string[]>(
     agent?.directories ?? []
   );
+  const [docs, setDocs] = useState<string[]>(agent?.docs ?? []);
   const [instructions, setInstructions] = useState(agent?.instructions ?? "");
   const [dirInput, setDirInput] = useState("");
+  const [docInput, setDocInput] = useState("");
 
   function addDirectory() {
     const dir = dirInput.trim();
@@ -32,6 +34,18 @@ export function AgentEditor({ agent, onSave, onCancel }: AgentEditorProps) {
     setDirectories(directories.filter((d) => d !== dir));
   }
 
+  function addDoc() {
+    const doc = docInput.trim();
+    if (doc && !docs.includes(doc)) {
+      setDocs([...docs, doc]);
+      setDocInput("");
+    }
+  }
+
+  function removeDoc(doc: string) {
+    setDocs(docs.filter((d) => d !== doc));
+  }
+
   function handleSave() {
     const updated = new agentsNs.Agent({
       name: name.trim(),
@@ -41,6 +55,7 @@ export function AgentEditor({ agent, onSave, onCancel }: AgentEditorProps) {
       identity: identity.trim(),
       directories,
       instructions: instructions.trim(),
+      docs,
       learnings: agent?.learnings ?? "",
       filename: agent?.filename ?? "",
     });
@@ -153,6 +168,48 @@ export function AgentEditor({ agent, onSave, onCancel }: AgentEditorProps) {
             style={{ ...inputStyle, flex: 1 }}
           />
           <button onClick={addDirectory} style={ghostButtonStyle}>
+            Add
+          </button>
+        </div>
+      </Field>
+
+      {/* Docs */}
+      <Field label="Docs">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)", marginBottom: "var(--space-sm)" }}>
+          {docs.map((d) => (
+            <span
+              key={d}
+              style={{
+                fontSize: "var(--label)",
+                fontFamily: "var(--font-mono)",
+                color: "var(--text-secondary)",
+                background: "var(--surface)",
+                borderRadius: "var(--radius-md)",
+                padding: "2px 6px",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-xs)",
+              }}
+            >
+              {d}
+              <span
+                onClick={() => removeDoc(d)}
+                style={{ cursor: "pointer", color: "var(--error)", fontSize: 10 }}
+              >
+                &times;
+              </span>
+            </span>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: "var(--space-sm)" }}>
+          <input
+            value={docInput}
+            onChange={(e) => setDocInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addDoc()}
+            placeholder="docs/concepts.md or https://..."
+            style={{ ...inputStyle, flex: 1 }}
+          />
+          <button onClick={addDoc} style={ghostButtonStyle}>
             Add
           </button>
         </div>
