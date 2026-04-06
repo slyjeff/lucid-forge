@@ -47,9 +47,7 @@ func (s *Store) ListFeatures() ([]Feature, error) {
 		if err != nil {
 			continue // skip unreadable features
 		}
-		if f.IsReviewable() {
-			features = append(features, *f)
-		}
+		features = append(features, *f)
 	}
 	return features, nil
 }

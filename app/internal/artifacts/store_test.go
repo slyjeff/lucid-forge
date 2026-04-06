@@ -79,7 +79,7 @@ func setupFeature(t *testing.T, root string, f Feature) {
 
 // --- ListFeatures ---
 
-func TestListFeatures_FiltersToReviewableStatuses(t *testing.T) {
+func TestListFeatures_ReturnsAllStatuses(t *testing.T) {
 	// Arrange
 	root := t.TempDir()
 	statuses := map[string]FeatureStatus{
@@ -103,17 +103,8 @@ func TestListFeatures_FiltersToReviewableStatuses(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(features) != 3 {
-		t.Fatalf("expected 3 reviewable features, got %d", len(features))
-	}
-	ids := map[string]bool{}
-	for _, f := range features {
-		ids[f.ID] = true
-	}
-	for _, expected := range []string{"feat-userreview", "feat-approved", "feat-cancelled"} {
-		if !ids[expected] {
-			t.Errorf("expected feature %s in results", expected)
-		}
+	if len(features) != 7 {
+		t.Fatalf("expected 7 features, got %d", len(features))
 	}
 }
 
@@ -525,33 +516,3 @@ func TestUpdateFeatureStatus_PersistsChange(t *testing.T) {
 	}
 }
 
-// --- Feature.IsReviewable ---
-
-func TestFeature_IsReviewable(t *testing.T) {
-	tests := []struct {
-		status   FeatureStatus
-		expected bool
-	}{
-		{StatusDiscovery, false},
-		{StatusPlanning, false},
-		{StatusExecuting, false},
-		{StatusCodeReview, false},
-		{StatusUserReview, true},
-		{StatusApproved, true},
-		{StatusCancelled, true},
-	}
-	for _, tt := range tests {
-		t.Run(string(tt.status), func(t *testing.T) {
-			// Arrange
-			f := Feature{Status: tt.status}
-
-			// Act
-			result := f.IsReviewable()
-
-			// Assert
-			if result != tt.expected {
-				t.Errorf("IsReviewable() for %s: got %v, want %v", tt.status, result, tt.expected)
-			}
-		})
-	}
-}

@@ -11,8 +11,8 @@ App Launch
   └─ Feature List (home)
        ├─ Feature Review (per-feature)
        │    ├─ Discovery tab
-       │    ├─ UX Design tab (if present)
-       │    ├─ Plan tab
+       │    ├─ UX Design tab (if hasUxDesign)
+       │    ├─ Plan tab (if status != discovery)
        │    ├─ AI Review Notes tab (if review issues exist)
        │    └─ Review tab (if steps exist)
        └─ Agent Management
@@ -48,14 +48,14 @@ The landing page. Lists all reviewable features from `.lucidforge/features/`. Sh
 
 **Data:**
 - `GetFeatures()` → list of features with status and step count
-- Only shows features with status `user-review`, `approved`, or `cancelled`
+- Shows features in all statuses (`discovery`, `planning`, `executing`, `code-review`, `documenting`, `user-review`, `approved`, `cancelled`)
 - Click a feature card → navigate to Feature Review
 - [Agents] button → navigate to Agent Management
 - Project path button → open directory picker to switch projects
 
 **Feature card contents:**
 - Feature name (bold)
-- Status badge (colored: gold for user-review, green for approved, red for cancelled)
+- Status badge (colored: gold for `user-review`, green for `approved`, red for `cancelled`, muted for in-progress statuses)
 - Step count
 - Description
 - ✔ commit button and ✖ cancel button (only for `user-review` features, with hover effects)
@@ -86,9 +86,9 @@ The core review experience. One page with tabs for the full review flow.
 ```
 
 **Header:** Back button and feature name
-**Tabs:** Discovery, UX Design (conditional), Plan, AI Review Notes (conditional), Review (conditional)
+**Tabs:** Discovery, UX Design (conditional on `hasUxDesign`), Plan (conditional: hidden during `discovery` status), AI Review Notes (conditional on review issues), Review (conditional on steps existing)
 
-When steps exist, the page opens directly to the Review tab. Otherwise it opens to Discovery.
+When steps exist, the page opens directly to the Review tab. When past discovery but no steps yet, it opens to Plan. Otherwise it opens to Discovery.
 
 #### Discovery Tab
 

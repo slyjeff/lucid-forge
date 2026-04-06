@@ -16,7 +16,10 @@ export function FeatureReviewPage() {
 
   useEffect(() => {
     if (detail && activeTab === null) {
-      setActiveTab(detail.feature.stepCount > 0 ? "steps" : "discovery");
+      const { feature } = detail;
+      if (feature.stepCount > 0) setActiveTab("steps");
+      else if (feature.status !== "discovery") setActiveTab("plan");
+      else setActiveTab("discovery");
     }
   }, [detail, activeTab]);
 
@@ -42,7 +45,7 @@ export function FeatureReviewPage() {
   const tabs = [
     { id: "discovery", label: "Discovery" },
     { id: "ux-design", label: "UX Design", visible: feature.hasUxDesign },
-    { id: "plan", label: "Plan" },
+    { id: "plan", label: "Plan", visible: feature.status !== "discovery" },
     { id: "issues", label: "AI Review Notes", visible: review != null && review.issues?.length > 0 },
     { id: "steps", label: "Review", visible: hasSteps },
   ];

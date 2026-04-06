@@ -44,7 +44,3 @@ type PhaseUsage struct {
 	CostUsd      float64 `json:"costUsd"`
 }
 
-// IsReviewable returns true if the feature is in a state visible to readers.
-func (f *Feature) IsReviewable() bool {
-	return f.Status == StatusUserReview || f.Status == StatusApproved || f.Status == StatusCancelled
-}
