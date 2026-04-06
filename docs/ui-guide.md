@@ -52,7 +52,7 @@ The landing page. Lists all reviewable features from `.lucidforge/features/`. Sh
 - **Sort order:** open features first (`user-review`, `executing`, `code-review`, `documenting`, `planning`, `discovery`), then `approved`, then `cancelled`; most recently created at the top within each status group
 - Click a feature card → navigate to Feature Review
 - [Agents] button → navigate to Agent Management
-- Project path button → open directory picker to switch projects
+- Project path button → open project switcher: shows recent directories with a Browse button; if no history, goes straight to the native directory picker
 
 **Feature card contents:**
 - Feature name (bold)
@@ -65,7 +65,7 @@ The landing page. Lists all reviewable features from `.lucidforge/features/`. Sh
 - ✔ Commit: opens a dialog to enter a commit message, then stages all changed files and creates a single commit
 - ✖ Cancel: confirmation dialog, marks feature as cancelled
 
-**Project persistence:** The app remembers the last opened project and reopens it on next launch.
+**Project persistence:** The app keeps a list of up to 10 recent project roots in `LucidForge/prefs.json`. On next launch it reopens the most recent. When switching projects, the switcher dialog lists all remembered roots that still exist on disk; roots that no longer exist are silently pruned. "Browse..." always opens the native directory picker.
 
 **Auto-refresh:** The feature list auto-refreshes when `.lucidforge/features/` changes on disk (via fsnotify).
 
@@ -277,7 +277,9 @@ Full management UI for LucidForge agents.
 | Save file edit | `SaveFileContent(filePath, content)` | writes to working tree |
 | Commit feature | `ApproveFeature(featureId, commitMessage)` | git add + commit |
 | Cancel feature | `CancelFeature(featureId)` | updates status |
-| Select project | `SelectProjectRoot()` | directory picker |
+| Project switcher — recent list | `GetRecentProjectRoots()` | `[]string` of existing dirs |
+| Project switcher — pick recent | `SwitchProjectRoot(root)` | validates + switches |
+| Project switcher — browse | `SelectProjectRoot()` | native directory picker |
 | Get project root | `GetProjectRoot()` | current path |
 | Agent list | `GetAgents()` | `[]Agent` |
 | Agent detail | `GetAgent(name)` | `*Agent` |
@@ -296,7 +298,7 @@ Full management UI for LucidForge agents.
 - Hide whitespace toggle
 
 **Persisted to app preferences (across sessions):**
-- Last opened project root
+- Recent project roots (up to 10, stored in `LucidForge/prefs.json`)
 
 **In-memory only (resets on page change):**
 - Selected step

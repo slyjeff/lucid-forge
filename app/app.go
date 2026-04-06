@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -77,6 +78,33 @@ func (a *App) setProjectRoot(root string) {
 
 func (a *App) GetProjectRoot() string {
 	return a.projectRoot
+}
+
+// GetRecentProjectRoots returns recently used project roots that still exist on disk.
+// Directories that no longer exist are automatically removed from the saved list.
+func (a *App) GetRecentProjectRoots() []string {
+	all := features.LoadRecentProjectRoots()
+	var valid []string
+	for _, root := range all {
+		if _, err := os.Stat(root); err == nil {
+			valid = append(valid, root)
+		} else {
+			features.RemoveProjectRoot(root)
+		}
+	}
+	return valid
+}
+
+// SwitchProjectRoot switches to a specific project root (e.g. selected from recent list).
+// Returns an error if the directory no longer exists, and removes it from recents.
+func (a *App) SwitchProjectRoot(root string) error {
+	if _, err := os.Stat(root); err != nil {
+		features.RemoveProjectRoot(root)
+		return fmt.Errorf("directory no longer exists: %s", root)
+	}
+	a.setProjectRoot(root)
+	runtime.EventsEmit(a.ctx, "features:changed")
+	return nil
 }
 
 func (a *App) SelectProjectRoot() (string, error) {

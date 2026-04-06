@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeatures } from "../hooks/useFeatures";
-import { GetProjectRoot, SelectProjectRoot, CancelFeature } from "../../wailsjs/go/main/App";
+import { GetProjectRoot, SelectProjectRoot, CancelFeature, GetRecentProjectRoots, SwitchProjectRoot } from "../../wailsjs/go/main/App";
 import { Dialog } from "../components/Dialog";
+import { ProjectSwitcherDialog } from "../components/ProjectSwitcherDialog";
 import logo from "../assets/lucidforge-logo.png";
 import type { Feature } from "../types";
 
@@ -157,15 +158,50 @@ export function FeatureListPage() {
   const navigate = useNavigate();
   const [projectRoot, setProjectRoot] = useState("");
   const [cancelling, setCancelling] = useState<Feature | null>(null);
+  const [recentRoots, setRecentRoots] = useState<string[]>([]);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   useEffect(() => {
     GetProjectRoot().then(setProjectRoot);
   }, []);
 
   async function handleSelectProject() {
+    const recents = await GetRecentProjectRoots();
+    if (recents.length === 0) {
+      await doBrowse();
+    } else {
+      setRecentRoots(recents);
+      setSwitcherOpen(true);
+    }
+  }
+
+  async function handlePickRecent(root: string) {
+    setSwitcherOpen(false);
+    try {
+      await SwitchProjectRoot(root);
+      setProjectRoot(root);
+      // Refresh recent list in case a non-existent entry was pruned
+      setRecentRoots(await GetRecentProjectRoots());
+      refetch();
+    } catch {
+      // Directory was removed — refresh and re-open with updated list
+      const updated = await GetRecentProjectRoots();
+      if (updated.length > 0) {
+        setRecentRoots(updated);
+        setSwitcherOpen(true);
+      } else {
+        await doBrowse();
+      }
+    }
+  }
+
+  async function doBrowse() {
+    setSwitcherOpen(false);
     const root = await SelectProjectRoot();
-    setProjectRoot(root);
-    refetch();
+    if (root) {
+      setProjectRoot(root);
+      refetch();
+    }
   }
 
   async function handleCancel(revertChanges: boolean) {
@@ -268,6 +304,14 @@ export function FeatureListPage() {
           </div>
         )}
       </div>
+
+      <ProjectSwitcherDialog
+        open={switcherOpen}
+        recentRoots={recentRoots}
+        onSelect={handlePickRecent}
+        onBrowse={doBrowse}
+        onClose={() => setSwitcherOpen(false)}
+      />
 
       {cancelling && (
         <Dialog open={true} onClose={() => setCancelling(null)}>
