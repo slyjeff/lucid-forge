@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { FileList } from "./FileList";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { FileList, sortFiles, groupByDirectory } from "./FileList";
 import { DiffViewer, DiffViewerHandle } from "./DiffViewer";
 import { FileReasoning } from "./FileReasoning";
 import { useDiff } from "../hooks/useDiff";
@@ -75,10 +75,11 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
     setLocalViewed(newViewed);
     MarkFileViewed(featureId, step.order, path);
 
-    // Navigate to next unviewed file
-    const idx = files.findIndex((f) => f.path === path);
-    for (let i = 1; i <= files.length; i++) {
-      const candidate = files[(idx + i) % files.length].path;
+    // Navigate to next unviewed file in display order
+    const ordered = displayOrder();
+    const idx = ordered.indexOf(path);
+    for (let i = 1; i <= ordered.length; i++) {
+      const candidate = ordered[(idx + i) % ordered.length];
       if (!newViewed.includes(candidate)) {
         setSelectedFile(candidate);
         break;
@@ -100,6 +101,61 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
     }
   }
 
+  // Grouped state (lifted here so markViewed can use display order)
+  const [grouped, setGrouped] = useState(() => {
+    return localStorage.getItem("lucidforge:groupFiles") === "true";
+  });
+
+  function toggleGrouped() {
+    const next = !grouped;
+    setGrouped(next);
+    localStorage.setItem("lucidforge:groupFiles", String(next));
+  }
+
+  // Ordered file paths matching what FileList renders
+  function displayOrder(): string[] {
+    if (grouped) {
+      return groupByDirectory(files).flatMap((g) => g.files.map((f) => f.path));
+    }
+    return sortFiles(files).map((f) => f.path);
+  }
+
+  // Resizable sidebar
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem("lucidforge:sidebarWidth");
+    return saved ? parseInt(saved, 10) : 250;
+  });
+  const dragging = useRef(false);
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    function onMouseMove(e: MouseEvent) {
+      if (!dragging.current) return;
+      const newWidth = Math.max(120, Math.min(600, startWidth + e.clientX - startX));
+      setSidebarWidth(newWidth);
+    }
+    function onMouseUp() {
+      dragging.current = false;
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      // Persist on release
+      setSidebarWidth((w) => {
+        localStorage.setItem("lucidforge:sidebarWidth", String(w));
+        return w;
+      });
+    }
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [sidebarWidth]);
+
   if (files.length === 0) {
     return (
       <div style={{ padding: "var(--space-xl)", color: "var(--text-secondary)" }}>
@@ -111,12 +167,30 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
   return (
     <div style={{ display: "flex", height: "100%" }}>
       {/* File list sidebar */}
-      <FileList
-        files={files}
-        viewedFiles={localViewed}
-        selectedPath={selectedFile}
-        onSelect={setSelectedFile}
-        onToggleViewed={toggleViewed}
+      <div style={{ width: sidebarWidth, flexShrink: 0, borderRight: "1px solid var(--border)" }}>
+        <FileList
+          files={files}
+          viewedFiles={localViewed}
+          selectedPath={selectedFile}
+          grouped={grouped}
+          onToggleGrouped={toggleGrouped}
+          onSelect={setSelectedFile}
+          onToggleViewed={toggleViewed}
+        />
+      </div>
+
+      {/* Resize handle */}
+      <div
+        onMouseDown={onMouseDown}
+        style={{
+          width: 4,
+          cursor: "col-resize",
+          flexShrink: 0,
+          background: "transparent",
+          transition: "background 150ms",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
+        onMouseLeave={(e) => { if (!dragging.current) e.currentTarget.style.background = "transparent"; }}
       />
 
       {/* Diff area */}
@@ -132,57 +206,57 @@ export function DiffTab({ step, featureId, selectedFile: selectedFileProp, onSel
             fontSize: "var(--label)",
           }}
         >
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--code)",
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+            }}
+          >
+            {selectedFile}
+            {matchedDiff && !matchedDiff.isDeleted && (
+              <span style={{ color: "var(--text-dim)", fontSize: "var(--label)", fontFamily: "var(--font-ui)" }}>
+                (editable)
+              </span>
+            )}
+          </span>
+          <button
+            onClick={() => diffRef.current?.goToPrevChange()}
+            style={{ ...toolbarBtnStyle, visibility: isModified ? "visible" : "hidden" }}
+            title="Previous change"
+          >
+            &#x25B2;
+          </button>
+          <button
+            onClick={() => diffRef.current?.goToNextChange()}
+            style={{ ...toolbarBtnStyle, visibility: isModified ? "visible" : "hidden" }}
+            title="Next change"
+          >
+            &#x25BC;
+          </button>
           <label
             style={{
-              flex: 1,
               display: "flex",
               alignItems: "center",
               gap: "var(--space-sm)",
               cursor: "pointer",
               userSelect: "none",
+              flexShrink: 0,
             }}
           >
             <input
               type="checkbox"
               checked={localViewed.includes(selectedFile)}
               onChange={() => toggleViewed(selectedFile)}
-              style={{ cursor: "pointer", flexShrink: 0 }}
+              style={{ cursor: "pointer" }}
             />
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "var(--code)",
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-sm)",
-              }}
-            >
-              {selectedFile}
-              {matchedDiff && !matchedDiff.isDeleted && (
-                <span style={{ color: "var(--text-dim)", fontSize: "var(--label)", fontFamily: "var(--font-ui)" }}>
-                  (editable)
-                </span>
-              )}
+            <span style={{ color: "var(--text-secondary)", fontSize: "var(--label)" }}>
+              Viewed
             </span>
           </label>
-          {isModified && (
-            <>
-              <button
-                onClick={() => diffRef.current?.goToPrevChange()}
-                style={toolbarBtnStyle}
-                title="Previous change"
-              >
-                &#x25B2;
-              </button>
-              <button
-                onClick={() => diffRef.current?.goToNextChange()}
-                style={toolbarBtnStyle}
-                title="Next change"
-              >
-                &#x25BC;
-              </button>
-            </>
-          )}
           <button
             onClick={() =>
               updateDiffMode(diffMode === "side-by-side" ? "unified" : "side-by-side")

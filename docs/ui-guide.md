@@ -150,23 +150,23 @@ The most complex tab. Step selector dropdown + sub-tabs for Insights, Diff, and 
 
 **Diff sub-tab:**
 ```
-┌────────────────────┬─────────────────────────────────────┐
-│ Files         2/5  │  src/models/User.cs                 │
-│                    │  [▲] [▼] [Side-by-Side] [□ Hide ws] │
-│ ○ A User.cs       │  [Mark Viewed] [Search]              │
-│ ✓ A AuthToken.cs  │ ────────────────────────────────────│
-│ ○ M DbContext.cs  │  ▼ Why this file was added           │
-│                    │  New entity needed for user          │
-│                    │  identity. Stores email and...       │
-│                    │ ────────────────────────────────────│
-│                    │                                     │
-│                    │    (Monaco editor / diff viewer)     │
-│                    │                                     │
-└────────────────────┴─────────────────────────────────────┘
+┌──────────────────────┬───────────────────────────────────────────────────┐
+│ Files [📁]      2/5  │  src/models/User.cs                               │
+│                      │  [▲] [▼] [□ Viewed] [Side-by-Side] [□ Hide ws]   │
+│ ○ A User.cs         │  [Search]                                          │
+│ ✓ A AuthToken.cs    │ ──────────────────────────────────────────────────│
+│ ○ M DbContext.cs    │  ▼ Why this file was added                        │
+│                      │  New entity needed for user                       │
+│                      │  identity. Stores email and...                    │
+│                      │ ──────────────────────────────────────────────────│
+│                      │                                                   │
+│                      │    (Monaco editor / diff viewer)                  │
+│                      │                                                   │
+└──────────────────────┴───────────────────────────────────────────────────┘
 ```
 
-- **File list panel:** file names with viewed indicator (✓/○), category badge (A=add, M=modify, D=delete), header with viewed count
-- **Toolbar:** file path, prev/next change buttons (▲/▼, for modified files only), side-by-side/unified toggle, hide whitespace checkbox, mark viewed button, search button
+- **File list panel:** resizable (drag the divider); file names with viewed indicator (✓/○), category badge (A=add, M=modify, D=delete), header with viewed count and group-by-directory toggle (📁)
+- **Toolbar:** file path, prev/next change buttons (▲/▼, always reserve space — hidden for non-modified files), viewed checkbox, side-by-side/unified toggle, hide whitespace checkbox, search button
 - **Reasoning panel:** collapsible, shows context-aware label ("Why this file was added/deleted/changed")
 - **Editor:** Monaco-based, always editable for new and modified files with debounced auto-save (500ms)
 
@@ -179,13 +179,17 @@ The most complex tab. Step selector dropdown + sub-tabs for Insights, Diff, and 
 
 **Editing:** Files are always editable (new and modified, not deleted). Changes auto-save to disk after 500ms of no typing. No explicit save button needed.
 
+**File list sorting:** Files are always sorted alphabetically by filename. In grouped mode, directories are sorted alphabetically, then files within each directory alphabetically.
+
+**Group by directory:** Toggle the 📁 button in the file list header. Groups files under their immediate parent directory name; disambiguates same-named directories by showing the parent path. Files are indented under their directory label.
+
 **Viewed tracking:**
-- Click the ○/✓ indicator in the file list to toggle viewed state
-- Marking as viewed auto-advances to the next unviewed file (wraps around)
+- Click the ○/✓ indicator in the file list, or use the Viewed checkbox in the toolbar
+- Marking as viewed auto-advances to the next unviewed file in display order (respects flat vs grouped sort)
 - Unmarking as viewed stays on the current file
 - Viewed state persists to the step artifact file (`viewedFiles` array)
 
-**Settings persistence:** Side-by-side vs unified mode and hide whitespace preference persist in localStorage across sessions.
+**Settings persistence:** Side-by-side vs unified mode, hide whitespace, group-by-directory toggle, and sidebar width persist in localStorage across sessions.
 
 **Map sub-tab:**
 
