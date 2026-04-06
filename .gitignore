@@ -22,6 +22,9 @@ node_modules/
 # Claude Code
 .claude/settings.local.json
 
+# Local scripts (machine-specific, not for the repo)
+build.sh
+
 # Logs
 *.log
 
