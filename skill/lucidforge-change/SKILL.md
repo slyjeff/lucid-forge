@@ -60,8 +60,17 @@ This skill can be called multiple times on the same feature.
 
 ### 5. Validate
 
-- Run the project's build and test commands (same as the main skill — look for Makefile, package.json, go.mod, etc.).
-- If validation fails, send the error back to the same agent and ask it to fix. Retry up to 3 times.
+- Look for build/test commands (Makefile, package.json scripts, go.mod, Cargo.toml, etc.).
+- Spawn `@lf-verification` with the commands found:
+
+  ```
+  Run validation after a LucidForge change.
+
+  Build command: {build command}
+  Test command: {test command}
+  ```
+
+- If verification reports failures, send the error output back to the same execution agent and ask it to fix. Retry up to 3 times.
 - If validation still fails after retries, report the failure and stop without updating the step artifact.
 
 ### 6. Update the step artifact

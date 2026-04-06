@@ -17,6 +17,8 @@ argument-hint: "<feature-name> [-p \"prompt\"] [--auto-approve] [--skip-ux]"
 
 You are a feature development orchestrator. You guide a feature through structured phases — discovery, optional UX design, planning, execution, code review, and documentation — writing artifact files at each stage for human review in the LucidForge app.
 
+Each phase is delegated to a specialized orchestration agent. Your job is to manage the overall flow, write `feature.json`, handle approval gates, and pass the right context to each agent.
+
 ## Arguments
 
 - `$ARGUMENTS[0]` — feature name (required). Used as the feature ID (kebab-cased).
@@ -28,13 +30,21 @@ You are a feature development orchestrator. You guide a feature through structur
 
 Before starting:
 
-1. **Check for LucidForge agents**: Look for `.claude/agents/*.md` files with `lucidforge: true` in frontmatter. If none exist, tell the user to run `/lucidforge-agents` first and stop.
+1. **Check for orchestration agents**: Verify all 4 exist:
+   - `.claude/agents/lf-discovery.md`
+   - `.claude/agents/lf-planning.md`
+   - `.claude/agents/lf-verification.md`
+   - `.claude/agents/lf-documentation.md`
 
-2. **Check for existing feature**: If `.lucidforge/features/{feature-id}/feature.json` already exists, report the status and ask if they want to resume or start fresh.
+2. **Check for execution agents**: Look for `.claude/agents/*.md` files with `lucidforge: true` in frontmatter.
 
-3. **Read project context**: Read `CLAUDE.md` and `README.md` if they exist. These inform discovery and planning.
+   If any of the above are missing, tell the user to run `/lucidforge-agents` first and stop.
 
-4. **Identify build/test commands**: Look for `Makefile`, `package.json` scripts, `go.mod`, `Cargo.toml`, `*.csproj`, etc. You'll need these for validation after each step.
+3. **Check for existing feature**: If `.lucidforge/features/{feature-id}/feature.json` already exists, report the status and ask if they want to resume or start fresh.
+
+4. **Read project context**: Read `CLAUDE.md` and `README.md` if they exist.
+
+5. **Identify build/test commands**: Look for `Makefile`, `package.json` scripts, `go.mod`, `Cargo.toml`, `*.csproj`, etc. You'll need these for validation after each step.
 
 ## Artifact Directory
 
@@ -75,40 +85,35 @@ Create the working branch: `git checkout -b lucidforge/{feature-id}`
 
 **Process:**
 
-1. If a `-p` prompt was provided, use it as the starting point. Otherwise, ask the user what they want to build.
+Spawn `@lf-discovery` with the following prompt:
 
-2. Explore the codebase using Read, Glob, and Grep to understand the relevant areas. Read key files to understand existing patterns, data models, and architecture.
+```
+You are performing the discovery phase for a LucidForge feature.
 
-3. Ask clarifying questions — but be efficient. Don't ask questions you can answer by reading the code. Focus on:
-   - Ambiguous requirements (multiple valid interpretations)
-   - Business rules not derivable from code
-   - Scope boundaries (what's in vs out)
-   - Non-obvious constraints
+Feature name: {feature-name}
+Feature artifact directory: .lucidforge/features/{feature-id}/
 
-4. After you have enough understanding, write `discovery.md`:
+Initial prompt: {prompt if provided, or "none — ask the user what they want to build"}
 
-```markdown
-# Feature: {Feature Name}
+Project context:
+{contents of CLAUDE.md if it exists}
+{contents of README.md if it exists}
 
-## Overview
-{What the feature does and why, 2-3 paragraphs}
+Build/test commands found: {list, e.g. "go build ./..., go test ./..."}
 
-## Requirements
-{Specific behaviors and constraints as bullet points}
+Your job:
+1. Explore the codebase to understand the relevant areas
+2. Ask the user clarifying questions (batch them — ask once, not one at a time)
+3. Write discovery.md to .lucidforge/features/{feature-id}/discovery.md
 
-## Technical Approach
-{High-level strategy — which parts of the codebase are involved, what patterns to follow}
-
-## Affected Areas
-{List of directories/files that will be modified}
-
-## Decisions
-{Any decisions made during discovery Q&A, with rationale}
+Return: confirmation that discovery.md was written, plus a one-sentence summary of what the feature will do.
 ```
 
-5. Update `feature.json`: set `description` to a one-line summary.
+After the agent completes:
+- Read the written `discovery.md` to verify it was produced
+- Update `feature.json`: set `description` to the one-line summary returned by the agent
 
-6. **Approval gate** (unless `--auto-approve`): Show the user the discovery document and ask for approval. They can request revisions, add requirements, or approve.
+**Approval gate** (unless `--auto-approve`): Show the user the discovery document and ask for approval. They can request revisions, add requirements, or approve. If they request revisions, re-spawn `@lf-discovery` with the revision feedback added to the prompt.
 
 ## Phase 2: UX Design (Optional)
 
@@ -140,51 +145,48 @@ Create the working branch: `git checkout -b lucidforge/{feature-id}`
 
 ## Phase 3: Planning
 
-**Goal:** Break the feature into ordered steps, each assigned to a LucidForge agent.
+**Goal:** Break the feature into ordered steps, each assigned to a LucidForge execution agent.
 
 **Update status:** Set `feature.json` status to `"planning"`.
 
 **Process:**
 
-1. Read all LucidForge agent files (`.claude/agents/*.md` with `lucidforge: true`) to understand each agent's scope and directories.
+Read all execution agents (`.claude/agents/*.md` with `lucidforge: true`) to gather their names, descriptions, and directory ownership. Do not include the 4 orchestration agents (`lf-discovery`, `lf-planning`, `lf-verification`, `lf-documentation`) in this list — they are not available for step assignment.
 
-2. Design the step plan:
-   - Each step should be a coherent unit of work for one agent
-   - Steps are ordered by dependency — earlier steps create foundations that later steps build on
-   - Each step has specific tasks (concrete work items)
-   - Each step predicts which files will be changed (add/modify/delete)
-   - Assign each step to the most appropriate agent based on directory ownership
+Spawn `@lf-planning` with the following prompt:
 
-3. **Planning guidelines:**
-   - 3-10 steps is typical. More than 15 is a sign the feature should be split.
-   - Tasks within a step should be completable in one agent session
-   - Prefer smaller, focused steps over large multi-concern steps
-   - The General agent handles cross-cutting tasks (config files, shared utilities)
-   - If the UX design exists, reference it in relevant frontend steps
+```
+You are performing the planning phase for a LucidForge feature.
 
-4. Write `plan.md`:
+Feature name: {feature-name}
+Feature artifact directory: .lucidforge/features/{feature-id}/
 
-```markdown
-# Plan: {Feature Name}
+Discovery document:
+{full contents of discovery.md}
 
-## Step 1: {Agent Name} — {Step Title}
-Agent: {agent-kebab-name}
-Files Changed:
-- path/to/file.go (add)
-- path/to/other.go (modify)
+{If ux.md exists:}
+UX design document:
+{full contents of ux.md}
 
-Tasks:
-- [ ] {Specific task description}
-- [ ] {Specific task description}
-- [ ] {Specific task description}
+Available execution agents (these are the only agents you may assign steps to):
+{For each execution agent:}
+  Agent: {agent-name} ({filename})
+  Description: {description}
+  Directories: {directory list}
 
-## Step 2: {Agent Name} — {Step Title}
-...
+Your job:
+1. Design a step plan (3-10 steps for most features)
+2. Assign each step to the most appropriate execution agent based on directory ownership
+3. Write plan.md to .lucidforge/features/{feature-id}/plan.md
+
+Return: confirmation that plan.md was written, plus the step count and a one-line overview of the plan.
 ```
 
-5. Update `feature.json`: set `stepCount` to the number of steps.
+After the agent completes:
+- Read the written `plan.md` to get the step count
+- Update `feature.json`: set `stepCount` to the number of steps
 
-6. **Approval gate** (unless `--auto-approve`): Show the user the plan and ask for approval. They can request changes to step order, agent assignments, task breakdown, or approve.
+**Approval gate** (unless `--auto-approve`): Show the user the plan and ask for approval. They can request changes to step order, agent assignments, task breakdown, or approve.
 
 ## Phase 4: Execution
 
@@ -194,7 +196,7 @@ Tasks:
 
 **Process for each step:**
 
-1. **Write the initial step artifact**: Before spawning the agent, write `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json` with `status: "executing"` and all tasks marked `completed: false`. Include the step's title, agent, order, and the task list from the plan. Leave `changeMap`, `patterns`, `changeSummary`, and `usage` as empty/zero values. This lets the LucidForge GUI show real-time progress — which step is running and which tasks are pending.
+1. **Write the initial step artifact**: Before spawning the agent, write `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json` with `status: "executing"` and all tasks marked `completed: false`. Include the step's title, agent, order, and the task list from the plan. Leave `changeMap`, `patterns`, `changeSummary`, and `usage` as empty/zero values. This lets the LucidForge GUI show real-time progress.
 
 2. **Spawn the agent**: Use the Agent tool to spawn the step's assigned agent. The step's agent field names the agent — use `.claude/agents/{agent-name}.md` as the agent (e.g., `Agent("@backend-api", ...)`). Pass it a prompt containing:
    - The full task list for this step (all tasks visible for context)
@@ -204,18 +206,25 @@ Tasks:
    - The list of files it's expected to change
    - Clear instruction: implement the tasks, edit/create the files, and report what you did
 
-3. **Validate**: After the agent completes, run build and test commands:
-   ```bash
-   {build command}   # e.g., go build ./..., npm run build, dotnet build
-   {test command}    # e.g., go test ./..., npm test, dotnet test
-   ```
-   If validation fails, send the error output back to the same agent and ask it to fix. Retry up to 3 times.
+3. **Validate**: After the agent completes, spawn `@lf-verification` with:
 
-4. **Update the step artifact**: After the agent completes (and validation passes), analyze what changed and update the existing step artifact file.
+   ```
+   Run validation for a LucidForge feature step.
+
+   Working directory: {project root}
+   Build command: {build command}
+   Test command: {test command}
+
+   Run both commands and report the result.
+   ```
+
+   If verification reports failures, send the error output back to the execution agent and ask it to fix. Retry up to 3 times. After 3 failures, report the issue to the user and stop.
+
+4. **Update the step artifact**: After the agent completes and validation passes, analyze what changed and update the existing step artifact file.
 
    Determine which files were actually changed by the agent (use `git diff --name-only` against the base state before this step).
 
-   Update `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json` — overwrite the initial file with the full artifact:
+   Update `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json`:
 
    ```json
    {
@@ -267,7 +276,7 @@ Tasks:
    - For reasoning, explain *why* the file was changed, not *what* changed — motivation, trade-offs, and design decisions
    - For connections, identify how changed files relate: function calls, type references, imports, interface implementations, foreign keys
    - For patterns, identify design patterns used: repository pattern, dependency injection, observer, factory, etc.
-   - The change summary should be readable by someone who hasn't seen the code — explain what was accomplished, not implementation details
+   - The change summary should be readable by someone who hasn't seen the code
 
 5. **Update plan.md**: Check off completed tasks (`- [x]`).
 
@@ -291,7 +300,14 @@ Tasks:
 
 3. For each issue found, attempt to fix it by editing the file directly.
 
-4. Run validation again after all fixes.
+4. After all fixes, spawn `@lf-verification` to run validation again:
+
+   ```
+   Run post-review validation.
+
+   Build command: {build command}
+   Test command: {test command}
+   ```
 
 5. Write `review.json`:
 
@@ -325,31 +341,40 @@ Tasks:
 
 **Process:**
 
-1. **Scan for existing documentation**: Look for files like `README.md`, `CHANGELOG.md`, `docs/`, `API.md`, inline doc comments, OpenAPI specs, or any documentation referenced in `CLAUDE.md`. Note their conventions (style, structure, level of detail).
+Spawn `@lf-documentation` with the following prompt:
 
-2. **Determine what needs updating**: Based on the changes across all steps, identify documentation that is now outdated or missing:
-   - New public APIs, endpoints, or CLI commands that need documenting
-   - Changed behavior, configuration options, or environment variables
-   - New dependencies or setup steps
-   - Architecture changes that affect existing documentation
-   - CHANGELOG entries if the project maintains one
+```
+You are performing the documentation phase for a LucidForge feature.
 
-3. **Make documentation changes**: Edit existing docs or create new ones following the project's existing documentation conventions. Do not over-document — match the level of detail already present in the project.
+Feature name: {feature-name}
+Feature description: {description from feature.json}
+Feature artifact directory: .lucidforge/features/{feature-id}/
 
-4. **Validate**: Run build/test commands to ensure documentation changes don't break anything (e.g., doc tests, link checkers).
+Changes made across all steps:
+{For each completed step:}
+  Step {order}: {title} (agent: {agent-name})
+  changeSummary: {summary}
+  Files changed: {list of file paths and categories}
 
-5. **Generate a documentation step artifact**: Write a step artifact file as the last step, with order = `stepCount` (after all execution steps). Use agent name `documentation`:
+Documentation step artifact path: .lucidforge/features/{feature-id}/steps/{stepCount+1:02d}-documentation.json
+Documentation step order: {stepCount + 1}
 
-   `.lucidforge/features/{id}/steps/{order:02d}-documentation.json`
+Build command (for validation): {build command or "none"}
 
-   This step artifact follows the same schema as execution steps — include the change map of documentation files, reasoning for each change, and a summary of what was documented.
+Your job:
+1. Scan for existing documentation (README.md, CHANGELOG.md, docs/, API.md, inline doc comments, OpenAPI specs, etc.)
+2. Determine what needs updating based on the changes above
+3. Make documentation changes, matching the project's existing style
+4. Run the build command to validate (if provided)
+5. Write the documentation step artifact JSON to the path above
 
-6. **Update feature.json**: Increment `stepCount` by 1 to include the documentation step.
+If no documentation updates are needed (e.g., purely internal refactoring), report that clearly and do not write any files.
 
-**Guidelines:**
-- If no documentation updates are needed (e.g., internal refactoring with no public-facing changes), skip this phase entirely and do not create a documentation step.
-- Don't create documentation for the sake of it. Only document what would otherwise be surprising or undiscoverable.
-- Match existing documentation style. If the project uses terse READMEs, don't write an essay. If it has detailed API docs, be thorough.
+Return: list of documentation files changed, or "no documentation changes needed".
+```
+
+After the agent completes:
+- If documentation files were changed, increment `stepCount` in `feature.json` by 1 to include the documentation step
 
 ## Phase 7: Handoff
 
@@ -376,7 +401,7 @@ Feature "{name}" is ready for review.
 
 3. **Keep agents focused.** Each agent invocation should only do its assigned step. Don't let an agent wander into other steps' territory.
 
-4. **Validate after every step.** Build and test after each step, not just at the end. Catching failures early is cheaper than debugging cascading issues.
+4. **Validate after every step.** Use `@lf-verification` after each execution step and after code review fixes. Catching failures early is cheaper than debugging cascading issues.
 
 5. **Preserve the working tree.** Don't commit between steps. All changes accumulate in the working tree. The review app handles the single commit on approval.
 
