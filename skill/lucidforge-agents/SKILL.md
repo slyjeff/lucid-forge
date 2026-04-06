@@ -59,7 +59,7 @@ Write these exact agent files:
 
 ```markdown
 ---
-name: LucidForge Discovery
+name: lf-discovery
 description: Explores the codebase and elicits requirements for a LucidForge feature. Writes discovery.md to the feature artifact directory.
 model: claude-sonnet-4-6
 allowed-tools:
@@ -115,7 +115,7 @@ Write the discovery document to the path provided in your prompt. Use this struc
 
 ```markdown
 ---
-name: LucidForge Planning
+name: lf-planning
 description: Designs the step-by-step implementation plan for a LucidForge feature. Assigns steps to execution agents and writes plan.md to the feature artifact directory.
 model: claude-sonnet-4-6
 allowed-tools:
@@ -169,7 +169,7 @@ Each task should be actionable (starts with a verb), specific (names types, func
 
 ```markdown
 ---
-name: LucidForge Verification
+name: lf-verification
 description: Runs build and test commands for a LucidForge feature step and reports results clearly.
 model: claude-haiku-4-5-20251001
 allowed-tools:
@@ -207,7 +207,7 @@ If both pass, "BUILD: PASS / TEST: PASS" is sufficient.
 
 ```markdown
 ---
-name: LucidForge Documentation
+name: lf-documentation
 description: Reviews all changes made during a LucidForge feature and updates project documentation accordingly. Writes the documentation step artifact.
 model: claude-sonnet-4-6
 allowed-tools:
@@ -271,13 +271,15 @@ Create agents that map to the project's natural boundaries. Guidelines:
 
 ### Step 5: Write Execution Agent Files
 
-Write each execution agent as a `.claude/agents/{name}.md` file (kebab-case filename, no `lf-` prefix).
+Write each execution agent as a `.claude/agents/{agent-kebab-name}.md` file (kebab-case, no `lf-` prefix).
+
+The `name` field in the frontmatter **must exactly match the filename** (without `.md`). Claude Code uses the `name` field to resolve `subagent_type` — if they don't match, the agent will not be found.
 
 Use this exact format:
 
 ```markdown
 ---
-name: {Agent Name}
+name: {agent-kebab-name}
 description: {One-line description of what this agent owns}
 model: claude-sonnet-4-6
 lucidforge: true
@@ -348,21 +350,23 @@ When refreshing existing agents:
 
 ## Examples
 
+Agent names are kebab-case and match both the filename and the `name` frontmatter field.
+
 **Go REST API project:**
-- Backend API — `cmd/`, `internal/api/`, `internal/handlers/`
-- Data Layer — `internal/models/`, `internal/repository/`, `migrations/`
-- Infrastructure — `deploy/`, `docker/`, `.github/`
-- General — catch-all
+- `backend-api` — `cmd/`, `internal/api/`, `internal/handlers/`
+- `data-layer` — `internal/models/`, `internal/repository/`, `migrations/`
+- `infrastructure` — `deploy/`, `docker/`, `.github/`
+- `general` — catch-all
 
 **React + Node monorepo:**
-- Frontend — `packages/web/src/`
-- Backend API — `packages/api/src/`
-- Shared Libraries — `packages/shared/`
-- Infrastructure — `infrastructure/`, `.github/`
-- General — catch-all
+- `frontend` — `packages/web/src/`
+- `backend-api` — `packages/api/src/`
+- `shared-libraries` — `packages/shared/`
+- `infrastructure` — `infrastructure/`, `.github/`
+- `general` — catch-all
 
 **Single-service Python project:**
-- API Layer — `app/api/`, `app/routes/`
-- Domain Logic — `app/services/`, `app/models/`
-- Data Layer — `app/db/`, `alembic/`
-- General — catch-all
+- `api-layer` — `app/api/`, `app/routes/`
+- `domain-logic` — `app/services/`, `app/models/`
+- `data-layer` — `app/db/`, `alembic/`
+- `general` — catch-all
