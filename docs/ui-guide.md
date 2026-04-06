@@ -49,6 +49,7 @@ The landing page. Lists all reviewable features from `.lucidforge/features/`. Sh
 **Data:**
 - `GetFeatures()` → list of features with status and step count
 - Shows features in all statuses (`discovery`, `planning`, `executing`, `code-review`, `documenting`, `user-review`, `approved`, `cancelled`)
+- **Sort order:** open features first (`user-review`, `executing`, `code-review`, `documenting`, `planning`, `discovery`), then `approved`, then `cancelled`; most recently created at the top within each status group
 - Click a feature card → navigate to Feature Review
 - [Agents] button → navigate to Agent Management
 - Project path button → open directory picker to switch projects

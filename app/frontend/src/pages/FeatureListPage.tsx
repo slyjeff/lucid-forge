@@ -133,6 +133,25 @@ function FeatureCard({ feature, onCancel }: FeatureCardProps) {
   );
 }
 
+const STATUS_ORDER: Record<string, number> = {
+  "user-review": 0,
+  "executing": 1,
+  "code-review": 2,
+  "documenting": 3,
+  "planning": 4,
+  "discovery": 5,
+  "approved": 6,
+  "cancelled": 7,
+};
+
+function sortFeatures(features: Feature[]): Feature[] {
+  return [...features].sort((a, b) => {
+    const statusDiff = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
+    if (statusDiff !== 0) return statusDiff;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
 export function FeatureListPage() {
   const { features, loading, refetch } = useFeatures();
   const navigate = useNavigate();
@@ -239,7 +258,7 @@ export function FeatureListPage() {
               gap: "var(--space-md)",
             }}
           >
-            {features.map((f) => (
+            {sortFeatures(features).map((f) => (
               <FeatureCard
                 key={f.id}
                 feature={f}
