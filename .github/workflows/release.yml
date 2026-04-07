@@ -54,6 +54,10 @@ jobs:
         working-directory: app/frontend
         run: npx vitest run --passWithNoTests
 
+      - name: Build frontend
+        working-directory: app/frontend
+        run: npm run build
+
       - name: Run Go tests
         working-directory: app
         run: go test ./...
