@@ -45,6 +45,11 @@ a:hover {
   text-decoration: underline;
 }
 
+select option {
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
