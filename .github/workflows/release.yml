@@ -80,6 +80,8 @@ jobs:
       - name: Build AppImage (Linux)
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get install -y imagemagick
+          convert app/frontend/src/assets/lucidforge-logo.png -resize 256x256 lucidforge-256.png
           wget -q "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
           wget -q "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh"
           chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-gtk.sh
@@ -87,7 +89,7 @@ jobs:
             --appdir AppDir \
             --executable app/build/bin/lucidforge \
             --desktop-file app/linux/lucidforge.desktop \
-            --icon-file app/frontend/src/assets/lucidforge-logo.png \
+            --icon-file lucidforge-256.png \
             --plugin gtk \
             --output appimage
           mv LucidForge-x86_64.AppImage ${{ matrix.artifact }}
