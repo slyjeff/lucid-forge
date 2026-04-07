@@ -198,7 +198,7 @@ After the agent completes:
 
 1. **Write the initial step artifact**: Before spawning the agent, write `.lucidforge/features/{id}/steps/{order:02d}-{agent-name}.json` with `status: "executing"` and all tasks marked `completed: false`. Include the step's title, agent, order, and the task list from the plan. Leave `changeMap`, `patterns`, `changeSummary`, and `usage` as empty/zero values. This lets the LucidForge GUI show real-time progress.
 
-2. **Spawn the agent**: Use the Agent tool to spawn the step's assigned agent. The step's agent field names the agent — use `.claude/agents/{agent-name}.md` as the agent (e.g., `Agent("@backend-api", ...)`). Pass it a prompt containing:
+2. **Invoke the agent**: Delegate to the step's assigned agent via `@{agent-name}` mention (e.g., `@backend-api`). Do not use the Agent tool — custom agents are invoked via `@mention`. Pass it the following context:
    - The full task list for this step (all tasks visible for context)
    - The discovery document context (key requirements)
    - The UX design context if relevant
@@ -218,7 +218,7 @@ After the agent completes:
    Run both commands and report the result.
    ```
 
-   If verification reports failures, send the error output back to the execution agent and ask it to fix. Retry up to 3 times. After 3 failures, report the issue to the user and stop.
+   If verification reports failures, delegate back to `@{agent-name}` with the error output and ask it to fix. Retry up to 3 times. After 3 failures, report the issue to the user and stop.
 
 4. **Update the step artifact**: After the agent completes and validation passes, analyze what changed and update the existing step artifact file.
 
@@ -392,6 +392,12 @@ Feature "{name}" is ready for review.
 
   Open the LucidForge app to review diffs, change maps, and insights.
 ```
+
+## Invoking Custom Agents
+
+The orchestration agents (`lf-discovery`, `lf-planning`, `lf-verification`, `lf-documentation`) and execution agents are custom agents defined in `.claude/agents/`. **Do not use the Agent tool to invoke them** — the Agent tool's `subagent_type` parameter only accepts built-in types (general-purpose, Explore, Plan, etc.) and will fail with a "not found" error if given a custom agent name.
+
+Instead, invoke custom agents via **`@mention`** — reference `@lf-discovery`, `@lf-planning`, etc. directly in your instructions. Claude Code detects the `@mention` and delegates to that custom agent. This is the correct invocation mechanism for all custom agents in this skill.
 
 ## Important Rules
 

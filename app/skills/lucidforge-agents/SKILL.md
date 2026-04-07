@@ -273,7 +273,7 @@ Create agents that map to the project's natural boundaries. Guidelines:
 
 Write each execution agent as a `.claude/agents/{agent-kebab-name}.md` file (kebab-case, no `lf-` prefix).
 
-The `name` field in the frontmatter **must exactly match the filename** (without `.md`). Claude Code uses the `name` field to resolve `subagent_type` — if they don't match, the agent will not be found.
+The `name` field in the frontmatter **must exactly match the filename** (without `.md`). Claude Code uses the `name` field to resolve `@agent-name` mentions — if they don't match, the agent will not load correctly.
 
 Use this exact format:
 

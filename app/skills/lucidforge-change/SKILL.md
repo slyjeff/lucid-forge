@@ -51,7 +51,7 @@ This skill can be called multiple times on the same feature.
 
 ### 4. Make the change
 
-- Spawn the step's assigned agent using the Agent tool. The step's `agent` field names the agent — use `.claude/agents/{agent-name}.md` as the agent (e.g., `Agent("@backend-api", ...)`). This ensures the change is made with the same identity, instructions, and directory scope as the original step. Pass it a prompt containing:
+- Delegate to `@{agent-name}` (e.g., `@backend-api`) via `@mention` — do not use the Agent tool, which only accepts built-in `subagent_type` values. This ensures the change is made with the same identity, instructions, and directory scope as the original step. Pass it the following context:
   - The user's change description
   - The step's current changeSummary (so it knows what's already been done)
   - The list of files already in the step's changeMap (so it knows what exists)
@@ -61,7 +61,7 @@ This skill can be called multiple times on the same feature.
 ### 5. Validate
 
 - Look for build/test commands (Makefile, package.json scripts, go.mod, Cargo.toml, etc.).
-- Spawn `@lf-verification` with the commands found:
+- Delegate to `@lf-verification` via `@mention`. Pass the commands found:
 
   ```
   Run validation after a LucidForge change.
