@@ -10,7 +10,7 @@ if [ "$1" = "--install" ]; then
 
     mkdir -p "$HOME/.local/share/applications"
     cp "$APPDIR/lucidforge.desktop" "$HOME/.local/share/applications/lucidforge.desktop"
-    sed -i "s|Exec=lucidforge|Exec=$APPIMAGE_PATH|g" \
+    sed -i "s|Exec=lucidforge|Exec=env APPIMAGE_EXTRACT_AND_RUN=1 $APPIMAGE_PATH|g" \
         "$HOME/.local/share/applications/lucidforge.desktop"
 
     mkdir -p "$HOME/.local/share/icons/hicolor/256x256/apps"

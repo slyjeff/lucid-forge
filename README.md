@@ -121,12 +121,20 @@ chmod +x lucidforge-linux-amd64.AppImage
 ./lucidforge-linux-amd64.AppImage
 ```
 
-**Integrate with your app launcher:**
+> **Ubuntu 22.04+ / missing FUSE 2:** If you get `error loading libfuse.so.2`, either install it (`sudo apt install libfuse2`) or prefix the command with `APPIMAGE_EXTRACT_AND_RUN=1`:
+> ```bash
+> APPIMAGE_EXTRACT_AND_RUN=1 ./lucidforge-linux-amd64.AppImage
+> ```
+
+**Integrate with your app launcher** (move to permanent location first):
 ```bash
-./lucidforge-linux-amd64.AppImage --install
+mkdir -p ~/.local/bin
+mv lucidforge-linux-amd64.AppImage ~/.local/bin/lucidforge.AppImage
+chmod +x ~/.local/bin/lucidforge.AppImage
+APPIMAGE_EXTRACT_AND_RUN=1 ~/.local/bin/lucidforge.AppImage --install
 ```
 
-This copies the `.desktop` file and icon into `~/.local/share/` so LucidForge appears in GNOME, KDE, and other desktop launchers.
+This copies the `.desktop` file and icon into `~/.local/share/` so LucidForge appears in GNOME, KDE, and other desktop launchers. The launcher entry is automatically configured to run without FUSE.
 
 ### Skills (manual install from source)
 
