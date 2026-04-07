@@ -38,14 +38,7 @@ func (a *App) startup(ctx context.Context) {
 			return
 		}
 	}
-
-	// Fall back to detecting from CWD
-	cwd, _ := os.Getwd()
-	root, err := features.FindProjectRoot(cwd)
-	if err != nil {
-		root = cwd
-	}
-	a.setProjectRoot(root)
+	// No valid last project — start with no project selected
 }
 
 func (a *App) shutdown(ctx context.Context) {
@@ -56,6 +49,15 @@ func (a *App) shutdown(ctx context.Context) {
 
 func (a *App) setProjectRoot(root string) {
 	a.projectRoot = root
+	if root == "" {
+		if a.featureWatcher != nil {
+			a.featureWatcher.Close()
+			a.featureWatcher = nil
+		}
+		a.artifactStore = nil
+		a.agentStore = nil
+		return
+	}
 	features.SaveLastProjectRoot(root)
 	a.artifactStore = artifacts.NewStore(root)
 	a.agentStore = agents.NewStore(filepath.Join(root, ".claude", "agents"))
@@ -125,6 +127,9 @@ func (a *App) SelectProjectRoot() (string, error) {
 // --- Features ---
 
 func (a *App) GetFeatures() ([]artifacts.Feature, error) {
+	if a.artifactStore == nil {
+		return nil, nil
+	}
 	return a.artifactStore.ListFeatures()
 }
 
@@ -251,6 +256,9 @@ func (a *App) InstallSkills() error {
 // --- Agents ---
 
 func (a *App) GetAgents() ([]agents.Agent, error) {
+	if a.agentStore == nil {
+		return nil, nil
+	}
 	return a.agentStore.ListAgents()
 }
 

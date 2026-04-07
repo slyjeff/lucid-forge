@@ -65,7 +65,7 @@ The landing page. Lists all reviewable features from `.lucidforge/features/`. Sh
 - ✔ Commit: opens a dialog to enter a commit message, then stages all changed files and creates a single commit
 - ✖ Cancel: confirmation dialog, marks feature as cancelled
 
-**Project persistence:** The app keeps a list of up to 10 recent project roots in `LucidForge/prefs.json`. On next launch it reopens the most recent. When switching projects, the switcher dialog lists all remembered roots that still exist on disk; roots that no longer exist are silently pruned. "Browse..." always opens the native directory picker.
+**Project persistence:** The app keeps a list of up to 10 recent project roots in `LucidForge/prefs.json`. On next launch it reopens the most recent valid project. If no valid saved project exists (first launch or all recents removed), the app starts with no project selected and prompts the user to pick one. The project button shows only the directory name (full path visible on hover). When switching projects, the switcher dialog lists all remembered roots that still exist on disk; roots that no longer exist are silently pruned. "Browse..." always opens the native directory picker.
 
 **Skills install banner:** On launch, the app checks whether all LucidForge Claude Code skills are present in `~/.claude/commands/`. If any are missing, a dismissible banner appears below the header row with an **Install** button. Clicking Install copies the bundled skill files to `~/.claude/commands/` and hides the banner. The banner reappears on the next launch if skills are still missing. Dismissed without installing = reappears next session.
 

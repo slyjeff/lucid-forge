@@ -274,7 +274,7 @@ export function FeatureListPage() {
             }}
             title={projectRoot}
           >
-            {projectRoot || "Select project..."}
+            {projectRoot ? projectRoot.split(/[\\/]/).filter(Boolean).pop() : "Select project..."}
           </button>
           <div style={{ flex: 1 }} />
           <button
