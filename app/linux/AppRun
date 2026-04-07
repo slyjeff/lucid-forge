@@ -24,4 +24,8 @@ if [ "$1" = "--install" ]; then
     exit 0
 fi
 
+# Force X11 backend to work around a Wails/GTK Wayland bug that prevents
+# horizontal window resizing beyond the initial window width.
+export GDK_BACKEND=x11
+
 exec "$APPDIR/usr/bin/lucidforge" "$@"
