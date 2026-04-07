@@ -11,9 +11,6 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-//go:embed frontend/src/assets/lucidforge-logo.png
-var appIcon []byte
-
 func main() {
 	app := NewApp()
 
@@ -29,7 +26,6 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 15, G: 17, B: 23, A: 1},
 		OnStartup:        app.startup,
 		OnShutdown:       app.shutdown,
-		Icon:             appIcon,
 		Bind: []interface{}{
 			app,
 		},
