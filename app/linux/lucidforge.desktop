@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=LucidForge
+Exec=lucidforge
+Icon=lucidforge
+Type=Application
+Categories=Development;
+Comment=AI-powered code review and feature orchestration
+StartupWMClass=lucidforge
