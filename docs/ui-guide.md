@@ -67,6 +67,8 @@ The landing page. Lists all reviewable features from `.lucidforge/features/`. Sh
 
 **Project persistence:** The app keeps a list of up to 10 recent project roots in `LucidForge/prefs.json`. On next launch it reopens the most recent. When switching projects, the switcher dialog lists all remembered roots that still exist on disk; roots that no longer exist are silently pruned. "Browse..." always opens the native directory picker.
 
+**Skills install banner:** On launch, the app checks whether all LucidForge Claude Code skills are present in `~/.claude/commands/`. If any are missing, a dismissible banner appears below the header row with an **Install** button. Clicking Install copies the bundled skill files to `~/.claude/commands/` and hides the banner. The banner reappears on the next launch if skills are still missing. Dismissed without installing = reappears next session.
+
 **Auto-refresh:** The feature list auto-refreshes when `.lucidforge/features/` changes on disk (via fsnotify).
 
 ### 2. Feature Review

@@ -25,11 +25,7 @@ func skillsCommandsDir() (string, error) {
 	return filepath.Join(home, ".claude", "commands"), nil
 }
 
-func skillsInstalled() bool {
-	dir, err := skillsCommandsDir()
-	if err != nil {
-		return false
-	}
+func skillsInstalledIn(dir string) bool {
 	for name := range skillMap {
 		if _, err := os.Stat(filepath.Join(dir, name)); os.IsNotExist(err) {
 			return false
@@ -38,11 +34,7 @@ func skillsInstalled() bool {
 	return true
 }
 
-func installSkills() error {
-	dir, err := skillsCommandsDir()
-	if err != nil {
-		return err
-	}
+func installSkillsTo(dir string) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
@@ -56,4 +48,20 @@ func installSkills() error {
 		}
 	}
 	return nil
+}
+
+func skillsInstalled() bool {
+	dir, err := skillsCommandsDir()
+	if err != nil {
+		return false
+	}
+	return skillsInstalledIn(dir)
+}
+
+func installSkills() error {
+	dir, err := skillsCommandsDir()
+	if err != nil {
+		return err
+	}
+	return installSkillsTo(dir)
 }
