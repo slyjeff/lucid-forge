@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+APPDIR="$(dirname "$(readlink -f "$0")")"
+
+if [ "$1" = "--install" ]; then
+    APPIMAGE_PATH="${APPIMAGE:-$(readlink -f "$0")}"
+
+    echo "Installing LucidForge..."
+
+    mkdir -p "$HOME/.local/share/applications"
+    cp "$APPDIR/lucidforge.desktop" "$HOME/.local/share/applications/lucidforge.desktop"
+    sed -i "s|Exec=lucidforge|Exec=$APPIMAGE_PATH|g" \
+        "$HOME/.local/share/applications/lucidforge.desktop"
+
+    mkdir -p "$HOME/.local/share/icons/hicolor/256x256/apps"
+    cp "$APPDIR/usr/share/icons/hicolor/256x256/apps/lucidforge.png" \
+        "$HOME/.local/share/icons/hicolor/256x256/apps/lucidforge.png"
+
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+    gtk-update-icon-cache "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+
+    echo "Done. LucidForge will now appear in your application launcher."
+    exit 0
+fi
+
+exec "$APPDIR/usr/bin/lucidforge" "$@"

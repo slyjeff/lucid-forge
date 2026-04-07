@@ -9,13 +9,23 @@ Two components work together:
 
 ## Quick Start
 
-### 1. Install the skills
+### 1. Install the desktop app
+
+Download the latest release for your platform from the [Releases](../../releases) page:
+
+- **Windows** — `lucidforge-windows-amd64.zip` → extract and run `lucidforge.exe`
+- **macOS** — `lucidforge-macos-universal.zip` → extract and run `lucidforge.app`
+- **Linux** — `lucidforge-linux-amd64.AppImage` → see [Linux install](#linux) below
+
+The app will prompt you to install the Claude Code skills on first launch. Click **Install** to copy them to `~/.claude/commands/`.
+
+### 1a. Install the skills manually (optional)
+
+If you prefer to install from source or skip the app:
 
 ```bash
-./install.sh
+./install.sh          # global install → ~/.claude/commands/
 ```
-
-This copies the LucidForge skills to `~/.claude/skills/` so they're available in all projects.
 
 ### 2. Generate agents for your project
 
@@ -97,7 +107,28 @@ You can also cancel a feature from the app (✖ button on the feature card), wit
 
 ## Install
 
-### Skills
+### Windows & macOS
+
+Download the latest release from the [Releases](../../releases) page, extract the archive, and run the app. On first launch, click **Install** when prompted to install the Claude Code skills.
+
+### Linux
+
+Download `lucidforge-linux-amd64.AppImage` from the [Releases](../../releases) page.
+
+**Run directly (no install):**
+```bash
+chmod +x lucidforge-linux-amd64.AppImage
+./lucidforge-linux-amd64.AppImage
+```
+
+**Integrate with your app launcher:**
+```bash
+./lucidforge-linux-amd64.AppImage --install
+```
+
+This copies the `.desktop` file and icon into `~/.local/share/` so LucidForge appears in GNOME, KDE, and other desktop launchers.
+
+### Skills (manual install from source)
 
 ```bash
 # Global install (all projects)
@@ -107,15 +138,7 @@ You can also cancel a feature from the app (✖ button on the feature card), wit
 ./install.sh --project /path/to/your/project
 ```
 
-Or copy manually:
-
-```bash
-cp -r skill/lucidforge ~/.claude/skills/
-cp -r skill/lucidforge-agents ~/.claude/skills/
-cp -r skill/lucidforge-commit ~/.claude/skills/
-```
-
-### Desktop App
+### Build from Source
 
 Requires [Go](https://go.dev/dl/) and [Wails v2](https://wails.io/):
 
@@ -173,13 +196,15 @@ The artifact schema is documented in [docs/artifact-schema.md](docs/artifact-sch
 ## Project Structure
 
 ```
-skill/
-    lucidforge/SKILL.md             # feature orchestration
-    lucidforge-agents/SKILL.md      # agent generation
-    lucidforge-commit/SKILL.md      # feature commit
 app/                                # Wails desktop app (Go + React)
+    skills/                         # Claude Code skill files (bundled in the app)
+        lucidforge/SKILL.md
+        lucidforge-agents/SKILL.md
+        lucidforge-cancel/SKILL.md
+        lucidforge-change/SKILL.md
+        lucidforge-commit/SKILL.md
 docs/                               # design documentation
-install.sh                          # skill installer
+install.sh                          # skill installer (for source installs)
 ```
 
 ## License
