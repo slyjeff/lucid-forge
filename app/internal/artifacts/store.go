@@ -99,8 +99,13 @@ func (s *Store) ListMockups(featureID string) ([]string, error) {
 }
 
 // LoadPlan reads the plan.md file as a raw string.
+// Returns an empty string (no error) if the file does not exist yet.
 func (s *Store) LoadPlan(featureID string) (string, error) {
-	return s.readMarkdown(featureID, "plan.md")
+	content, err := s.readMarkdown(featureID, "plan.md")
+	if err != nil && os.IsNotExist(err) {
+		return "", nil
+	}
+	return content, err
 }
 
 // LoadSteps reads all step JSON files for a feature, sorted by order.
