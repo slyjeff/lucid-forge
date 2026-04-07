@@ -30,6 +30,8 @@ function getLanguage(filePath: string): string {
     html: "html", css: "css", scss: "scss", json: "json",
     yaml: "yaml", yml: "yaml", md: "markdown", sql: "sql",
     sh: "shell", bash: "shell", xml: "xml", toml: "toml", dockerfile: "dockerfile",
+    dart: "dart", less: "less", graphql: "graphql", gql: "graphql",
+    handlebars: "handlebars", hbs: "handlebars",
   };
   return map[ext] || "plaintext";
 }

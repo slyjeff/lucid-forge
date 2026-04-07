@@ -24,6 +24,7 @@ node_modules/
 
 # Local scripts (machine-specific, not for the repo)
 build.sh
+deploy.sh
 
 # Logs
 *.log
