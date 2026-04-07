@@ -90,8 +90,16 @@ export function SaveFileContent(arg1, arg2) {
   return window['go']['main']['App']['SaveFileContent'](arg1, arg2);
 }
 
+export function InstallSkills() {
+  return window['go']['main']['App']['InstallSkills']();
+}
+
 export function SelectProjectRoot() {
   return window['go']['main']['App']['SelectProjectRoot']();
+}
+
+export function SkillsInstalled() {
+  return window['go']['main']['App']['SkillsInstalled']();
 }
 
 export function SwitchProjectRoot(arg1) {

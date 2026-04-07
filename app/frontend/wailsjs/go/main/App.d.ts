@@ -48,7 +48,11 @@ export function SaveAgent(arg1:agents.Agent):Promise<void>;
 
 export function SaveFileContent(arg1:string,arg2:string):Promise<void>;
 
+export function InstallSkills():Promise<void>;
+
 export function SelectProjectRoot():Promise<string>;
+
+export function SkillsInstalled():Promise<boolean>;
 
 export function SwitchProjectRoot(arg1:string):Promise<void>;
 

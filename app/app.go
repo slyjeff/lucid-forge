@@ -238,6 +238,16 @@ func (a *App) OpenMockup(featureID, filename string) error {
 	return browser.OpenFile(path)
 }
 
+// --- Skills ---
+
+func (a *App) SkillsInstalled() bool {
+	return skillsInstalled()
+}
+
+func (a *App) InstallSkills() error {
+	return installSkills()
+}
+
 // --- Agents ---
 
 func (a *App) GetAgents() ([]agents.Agent, error) {

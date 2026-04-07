@@ -6,9 +6,9 @@ Cross-platform tool that orchestrates Claude-powered code generation through ste
 
 Producer-consumer model with the artifact schema at the center:
 
-- **Agent Skill** (`skill/lucidforge-agents/SKILL.md`) — Claude Code skill that scans the project and generates LucidForge agent files
-- **Feature Skill** (`skill/lucidforge/SKILL.md`) — Claude Code skill that orchestrates multi-step feature development, writes artifact files to `.lucidforge/features/`
-- **Change Skill** (`skill/lucidforge-change/SKILL.md`) — Claude Code skill for making targeted changes to a feature's code and updating the step artifact
+- **Agent Skill** (`app/skills/lucidforge-agents/SKILL.md`) — Claude Code skill that scans the project and generates LucidForge agent files
+- **Feature Skill** (`app/skills/lucidforge/SKILL.md`) — Claude Code skill that orchestrates multi-step feature development, writes artifact files to `.lucidforge/features/`
+- **Change Skill** (`app/skills/lucidforge-change/SKILL.md`) — Claude Code skill for making targeted changes to a feature's code and updating the step artifact
 - **Wails App** (`app/`) — Go + React desktop app, the reference implementation
 - **VS Code Extension** — separate repo, TypeScript
 - **JetBrains Plugin** — separate repo, Kotlin
@@ -26,10 +26,13 @@ wails build    # production build
 ## Project Structure
 
 ```
-skill/lucidforge/SKILL.md          # feature orchestration skill
-skill/lucidforge-change/SKILL.md   # targeted change + step update skill
-skill/lucidforge-agents/SKILL.md   # agent generation skill
 app/                           # Wails desktop app (Go + React)
+    skills/                    # Claude Code skill files (embedded in app binary for install)
+        lucidforge/SKILL.md
+        lucidforge-agents/SKILL.md
+        lucidforge-cancel/SKILL.md
+        lucidforge-change/SKILL.md
+        lucidforge-commit/SKILL.md
     main.go                    # entry point
     app.go                     # Go backend: artifact reading, git, approval
     internal/

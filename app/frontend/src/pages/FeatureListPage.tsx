@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFeatures } from "../hooks/useFeatures";
-import { GetProjectRoot, SelectProjectRoot, CancelFeature, GetRecentProjectRoots, SwitchProjectRoot } from "../../wailsjs/go/main/App";
+import { GetProjectRoot, SelectProjectRoot, CancelFeature, GetRecentProjectRoots, SwitchProjectRoot, SkillsInstalled, InstallSkills } from "../../wailsjs/go/main/App";
 import { Dialog } from "../components/Dialog";
 import { ProjectSwitcherDialog } from "../components/ProjectSwitcherDialog";
 import logo from "../assets/lucidforge-logo.png";
@@ -160,10 +160,28 @@ export function FeatureListPage() {
   const [cancelling, setCancelling] = useState<Feature | null>(null);
   const [recentRoots, setRecentRoots] = useState<string[]>([]);
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [skillsInstalled, setSkillsInstalled] = useState(true);
+  const [skillsDismissed, setSkillsDismissed] = useState(false);
+  const [installingSkills, setInstallingSkills] = useState(false);
+  const [skillsError, setSkillsError] = useState<string | null>(null);
 
   useEffect(() => {
     GetProjectRoot().then(setProjectRoot);
+    SkillsInstalled().then(setSkillsInstalled);
   }, []);
+
+  async function handleInstallSkills() {
+    setInstallingSkills(true);
+    setSkillsError(null);
+    try {
+      await InstallSkills();
+      setSkillsInstalled(true);
+    } catch (err) {
+      setSkillsError(String(err));
+    } finally {
+      setInstallingSkills(false);
+    }
+  }
 
   async function handleSelectProject() {
     const recents = await GetRecentProjectRoots();
@@ -282,6 +300,57 @@ export function FeatureListPage() {
             Agents
           </button>
         </div>
+        {!skillsInstalled && !skillsDismissed && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-md)",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+            padding: "10px var(--space-lg)",
+            marginBottom: "var(--space-lg)",
+            fontSize: "var(--body)",
+          }}>
+            <span style={{ flex: 1, color: "var(--text-secondary)" }}>
+              LucidForge skills are not installed in Claude Code.
+            </span>
+            {skillsError && (
+              <span style={{ color: "var(--error)", fontSize: "var(--label)" }}>{skillsError}</span>
+            )}
+            <button
+              onClick={handleInstallSkills}
+              disabled={installingSkills}
+              style={{
+                background: "var(--accent)",
+                border: "none",
+                borderRadius: "var(--radius-md)",
+                color: "#fff",
+                cursor: installingSkills ? "default" : "pointer",
+                padding: "5px 14px",
+                fontSize: "var(--body)",
+                opacity: installingSkills ? 0.7 : 1,
+              }}
+            >
+              {installingSkills ? "Installing..." : "Install"}
+            </button>
+            <button
+              onClick={() => setSkillsDismissed(true)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--text-dim)",
+                cursor: "pointer",
+                padding: "4px 6px",
+                fontSize: 14,
+                lineHeight: 1,
+              }}
+              title="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         {loading ? (
           <p style={{ color: "var(--text-secondary)" }}>Loading...</p>
         ) : features.length === 0 ? (
