@@ -23,7 +23,7 @@ export function FeatureReviewPage() {
     }
   }, [detail, activeTab]);
 
-  if (loading || !activeTab) {
+  if (loading) {
     return (
       <div style={{ padding: "var(--space-xl)", color: "var(--text-secondary)" }}>
         Loading...
@@ -35,6 +35,14 @@ export function FeatureReviewPage() {
     return (
       <div style={{ padding: "var(--space-xl)", color: "var(--error)" }}>
         {error || "Feature not found"}
+      </div>
+    );
+  }
+
+  if (!activeTab) {
+    return (
+      <div style={{ padding: "var(--space-xl)", color: "var(--text-secondary)" }}>
+        Loading...
       </div>
     );
   }
