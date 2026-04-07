@@ -115,16 +115,16 @@ Download the latest release from the [Releases](../../releases) page, extract th
 
 Download `lucidforge-linux-amd64.AppImage` from the [Releases](../../releases) page.
 
+**Prerequisites (Ubuntu 22.04+):**
+```bash
+sudo apt install libfuse2
+```
+
 **Run directly (no install):**
 ```bash
 chmod +x lucidforge-linux-amd64.AppImage
 ./lucidforge-linux-amd64.AppImage
 ```
-
-> **Ubuntu 22.04+ / missing FUSE 2:** If you get `error loading libfuse.so.2`, either install it (`sudo apt install libfuse2`) or prefix the command with `APPIMAGE_EXTRACT_AND_RUN=1`:
-> ```bash
-> APPIMAGE_EXTRACT_AND_RUN=1 ./lucidforge-linux-amd64.AppImage
-> ```
 
 **Integrate with your app launcher** (move to permanent location first):
 ```bash
