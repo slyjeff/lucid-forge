@@ -48,7 +48,7 @@ export function FileReasoning({ reasoning, category }: FileReasoningProps) {
             padding: "0 var(--space-lg) var(--space-md)",
             fontSize: "var(--body)",
             lineHeight: 1.5,
-            color: "var(--text-primary)",
+            color: "var(--accent)",
           }}
         >
           {reasoning}
