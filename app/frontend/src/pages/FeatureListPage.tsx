@@ -106,7 +106,7 @@ function FeatureCard({ feature, onCancel }: FeatureCardProps) {
                 e.currentTarget.style.borderColor = "transparent";
               }}
             >
-              &#x2716;
+              🗑
             </button>
           </div>
         )}

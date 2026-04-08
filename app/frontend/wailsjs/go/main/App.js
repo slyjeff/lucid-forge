@@ -70,6 +70,10 @@ export function GetUxDesign(arg1) {
   return window['go']['main']['App']['GetUxDesign'](arg1);
 }
 
+export function InstallSkills() {
+  return window['go']['main']['App']['InstallSkills']();
+}
+
 export function MarkFileViewed(arg1, arg2, arg3) {
   return window['go']['main']['App']['MarkFileViewed'](arg1, arg2, arg3);
 }
@@ -88,10 +92,6 @@ export function SaveAgent(arg1) {
 
 export function SaveFileContent(arg1, arg2) {
   return window['go']['main']['App']['SaveFileContent'](arg1, arg2);
-}
-
-export function InstallSkills() {
-  return window['go']['main']['App']['InstallSkills']();
 }
 
 export function SelectProjectRoot() {

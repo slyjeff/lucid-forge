@@ -38,6 +38,8 @@ export function GetSteps(arg1:string):Promise<Array<artifacts.Step>>;
 
 export function GetUxDesign(arg1:string):Promise<string>;
 
+export function InstallSkills():Promise<void>;
+
 export function MarkFileViewed(arg1:string,arg2:number,arg3:string):Promise<void>;
 
 export function MergeAgents(arg1:string,arg2:string):Promise<void>;
@@ -47,8 +49,6 @@ export function OpenMockup(arg1:string,arg2:string):Promise<void>;
 export function SaveAgent(arg1:agents.Agent):Promise<void>;
 
 export function SaveFileContent(arg1:string,arg2:string):Promise<void>;
-
-export function InstallSkills():Promise<void>;
 
 export function SelectProjectRoot():Promise<string>;
 

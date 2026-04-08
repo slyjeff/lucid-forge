@@ -4,6 +4,7 @@ import (
 	"embed"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 //go:embed skills
@@ -25,9 +26,28 @@ func skillsCommandsDir() (string, error) {
 	return filepath.Join(home, ".claude", "commands"), nil
 }
 
+func skillsSkillsDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".claude", "skills"), nil
+}
+
 func skillsInstalledIn(dir string) bool {
 	for name := range skillMap {
 		if _, err := os.Stat(filepath.Join(dir, name)); os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
+// skillsInstalledInSkillsDir checks ~/.claude/skills/<name>/SKILL.md layout.
+func skillsInstalledInSkillsDir(dir string) bool {
+	for name := range skillMap {
+		skillName := strings.TrimSuffix(name, ".md")
+		if _, err := os.Stat(filepath.Join(dir, skillName, "SKILL.md")); os.IsNotExist(err) {
 			return false
 		}
 	}
@@ -51,11 +71,13 @@ func installSkillsTo(dir string) error {
 }
 
 func skillsInstalled() bool {
-	dir, err := skillsCommandsDir()
-	if err != nil {
-		return false
+	if dir, err := skillsCommandsDir(); err == nil && skillsInstalledIn(dir) {
+		return true
 	}
-	return skillsInstalledIn(dir)
+	if dir, err := skillsSkillsDir(); err == nil && skillsInstalledInSkillsDir(dir) {
+		return true
+	}
+	return false
 }
 
 func installSkills() error {

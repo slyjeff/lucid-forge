@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -37,6 +38,50 @@ func TestSkillsInstalledIn_AllPresent(t *testing.T) {
 		}
 	}
 	if !skillsInstalledIn(dir) {
+		t.Fatal("expected true when all skills are present")
+	}
+}
+
+func TestSkillsInstalledInSkillsDir_MissingAll(t *testing.T) {
+	dir := t.TempDir()
+	if skillsInstalledInSkillsDir(dir) {
+		t.Fatal("expected false when no skills are installed")
+	}
+}
+
+func TestSkillsInstalledInSkillsDir_MissingOne(t *testing.T) {
+	dir := t.TempDir()
+	for name := range skillMap {
+		if name == "lucidforge.md" {
+			continue
+		}
+		skillName := strings.TrimSuffix(name, ".md")
+		skillDir := filepath.Join(dir, skillName)
+		if err := os.MkdirAll(skillDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte("x"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if skillsInstalledInSkillsDir(dir) {
+		t.Fatal("expected false when one skill is missing")
+	}
+}
+
+func TestSkillsInstalledInSkillsDir_AllPresent(t *testing.T) {
+	dir := t.TempDir()
+	for name := range skillMap {
+		skillName := strings.TrimSuffix(name, ".md")
+		skillDir := filepath.Join(dir, skillName)
+		if err := os.MkdirAll(skillDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte("x"), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if !skillsInstalledInSkillsDir(dir) {
 		t.Fatal("expected true when all skills are present")
 	}
 }

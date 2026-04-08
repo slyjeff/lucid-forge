@@ -90,7 +90,7 @@ Each reader is a separate project in a separate repo. They share no code. They s
 - FR-R20: Add new LucidForge agent — user provides name, description, directories; reader creates the `.md` file with `lucidforge: true`
 - FR-R21: Delete a LucidForge agent — removes the `.md` file (with confirmation). Cannot delete the General agent.
 - FR-R22: Merge two LucidForge agents — select source and target; merges directories (deduplicated), instructions (appended), and learnings (combined). Source agent is deleted after merge. Target keeps its identity and model if set.
-- FR-R23: Detect whether LucidForge Claude Code skills are installed in `~/.claude/commands/`; prompt the user to install them if missing, with a one-click install that copies the bundled skill files.
+- FR-R23: Detect whether LucidForge Claude Code skills are installed in `~/.claude/commands/` (legacy flat `.md` files) or `~/.claude/skills/<name>/SKILL.md` (current layout); prompt the user to install them if missing, with a one-click install that copies the bundled skill files to `~/.claude/commands/`.
 
 ## Non-Functional Requirements
 
