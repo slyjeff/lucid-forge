@@ -17,7 +17,7 @@ Download the latest release for your platform from the [Releases](../../releases
 - **macOS** — `lucidforge-macos-universal.zip` → extract and run `lucidforge.app`
 - **Linux** — `lucidforge-linux-amd64.AppImage` → see [Linux install](#linux) below
 
-The app will prompt you to install the Claude Code skills on first launch. Click **Install** to copy them to `~/.claude/commands/`.
+The app will prompt you to install the Claude Code skills on first launch. Click **Install** to copy them to `~/.claude/commands/`. If you already have skills installed under `~/.claude/skills/`, the app will detect them automatically and skip the prompt.
 
 ### 1a. Install the skills manually (optional)
 
@@ -65,11 +65,7 @@ Each phase writes artifact files to `.lucidforge/features/{feature-id}/`.
 
 **Option A: Desktop app**
 
-```bash
-cd app
-wails build
-./build/bin/lucidforge.exe
-```
+Download and run the app from the [Releases](../../releases) page (see [Install](#install) below). Open the project directory in the app.
 
 The app shows:
 - **Discovery** — what was asked for, requirements, technical approach
@@ -86,7 +82,17 @@ The app auto-refreshes when artifact files change, so you can have it open while
 
 Everything is in `.lucidforge/features/{feature-id}/` as human-readable JSON and markdown. You can inspect them with any text editor.
 
-### 5. Commit the feature
+### 5. Make targeted changes (optional)
+
+If you spot something during review that needs adjusting — a bug, a missed requirement, a style issue — run:
+
+```
+/lucidforge-change "description of what to change"
+```
+
+This makes the targeted edit using the same agent that owned the step, re-validates (build + tests), and updates the step artifact so the diff in the app reflects the change. You can run it as many times as needed.
+
+### 6. Commit the feature
 
 In Claude Code, run:
 
@@ -162,9 +168,10 @@ The built binary is in `app/build/bin/`.
 
 | Skill | Command | Purpose |
 |---|---|---|
-| `lucidforge` | `/lucidforge "name" -p "description"` | Orchestrate a full feature |
+| `lucidforge` | `/lucidforge "name" -p "description"` | Orchestrate a full feature through all phases |
 | `lucidforge-agents` | `/lucidforge-agents` | Generate or refresh project agents |
-| `lucidforge-commit` | `/lucidforge-commit [feature-id]` | Commit a completed feature |
+| `lucidforge-change` | `/lucidforge-change "description"` | Make a targeted change to a feature under review |
+| `lucidforge-commit` | `/lucidforge-commit [feature-id]` | Commit a completed feature, extract agent learnings |
 | `lucidforge-cancel` | `/lucidforge-cancel [feature-id]` | Cancel a feature, optionally revert changes |
 
 ## Managing Agents
