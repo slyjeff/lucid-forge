@@ -1,9 +1,9 @@
-name: Release
+name: Release App
 
 on:
   push:
     tags:
-      - "v*"
+      - "app-v*"
   workflow_dispatch:
 
 permissions:
