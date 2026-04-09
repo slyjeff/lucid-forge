@@ -10,8 +10,11 @@ Producer-consumer model with the artifact schema at the center:
 - **Feature Skill** (`app/skills/lucidforge/SKILL.md`) — Claude Code skill that orchestrates multi-step feature development, writes artifact files to `.lucidforge/features/`
 - **Change Skill** (`app/skills/lucidforge-change/SKILL.md`) — Claude Code skill for making targeted changes to a feature's code and updating the step artifact
 - **Wails App** (`app/`) — Go + React desktop app, the reference implementation
-- **VS Code Extension** — separate repo, TypeScript
-- **JetBrains Plugin** — separate repo, Kotlin
+- **JetBrains Plugin** (`jetbrains/`) — Kotlin, IntelliJ Platform
+- **VS Code Extension** (planned, `vscode/`) — TypeScript
+- **CLI** (planned, `cli/`) — additional consumer
+
+All consumers live in this monorepo as sibling directories. They share only the artifact schema — no shared code.
 
 The app has zero AI dependencies. It reads files, computes diffs, manages agents, and presents UI.
 
@@ -45,6 +48,7 @@ app/                           # Wails desktop app (Go + React)
         hooks/                 # Wails binding hooks
         pages/                 # FeatureList, FeatureReview, AgentManagement
         types/                 # TypeScript types matching artifact schema
+jetbrains/                     # JetBrains plugin (Kotlin, Gradle IntelliJ Plugin)
 docs/                          # design documentation
 ```
 
@@ -65,4 +69,4 @@ docs/                          # design documentation
 - **`lucidforge: true` marks LucidForge agents** — the app and skills filter `.claude/agents/` by this frontmatter flag
 - **Go + React** — matches the team's stack for easy adoption and contribution
 - **Web tech for code review UI** — Monaco for diffs, D3/React Flow for change maps, CSS for polish
-- **Separate repos for each reader** — no shared code between Wails app, VS Code extension, and JetBrains plugin; they share only the schema
+- **Monorepo, no shared code between consumers** — Wails app, JetBrains plugin, VS Code extension, and CLI live as sibling directories and share only the artifact schema. Each is released independently with its own tag prefix (`app-v*`, `jetbrains-v*`, `vscode-v*`, `cli-v*`) and its own CHANGELOG.

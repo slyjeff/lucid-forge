@@ -1,0 +1,20 @@
+<idea-plugin>
+    <id>dev.lucidforge.jetbrains</id>
+    <name>LucidForge</name>
+    <vendor>LucidForge</vendor>
+    <description><![CDATA[
+        Review AI-generated features produced by the LucidForge Claude Code skill.
+        Browse features in <code>.lucidforge/features/</code>, inspect per-step changes
+        with the IDE's native diff viewer, and approve to commit.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>Git4Idea</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="LucidForge"
+                    anchor="right"
+                    icon="AllIcons.Toolwindows.ToolWindowProject"
+                    factoryClass="dev.lucidforge.jetbrains.toolwindow.LucidForgeToolWindowFactory"/>
+    </extensions>
+</idea-plugin>
