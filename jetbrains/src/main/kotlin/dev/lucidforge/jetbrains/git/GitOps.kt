@@ -1,51 +1,60 @@
 package dev.lucidforge.jetbrains.git
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
-import git4idea.GitUtil
-import git4idea.commands.Git
-import git4idea.commands.GitCommand
-import git4idea.commands.GitLineHandler
-import java.nio.file.Path
+import java.io.File
+import java.nio.charset.StandardCharsets
 
 /**
- * Thin wrapper around git4idea for the operations the plugin needs:
+ * Git operations the plugin needs:
  *   - retrieve a file's content at the feature's baseCommit (for diff)
+ *   - read a file from the working tree (for diff)
  *   - stage and commit a set of files (for approval)
  *
- * git4idea handles credentials, line endings, and the project's VCS root for us.
+ * We shell out to the `git` binary directly. Every project under VCS already has it,
+ * and ProcessBuilder is dependency-free — no git4idea API surface to chase.
  */
 object GitOps {
 
     fun getFileAtCommit(project: Project, commit: String, relativePath: String): String? {
-        val repo = repo(project) ?: return null
-        val handler = GitLineHandler(project, repo.root, GitCommand.SHOW)
-        handler.setSilent(true)
-        handler.addParameters("$commit:$relativePath")
-        val result = Git.getInstance().runCommand(handler)
-        return if (result.success()) result.outputAsJoinedString else null
+        val root = projectRoot(project) ?: return null
+        // Use forward slashes for git regardless of OS
+        val ref = "$commit:${relativePath.replace('\\', '/')}"
+        val (exit, out) = run(root, listOf("git", "show", ref))
+        return if (exit == 0) out else null
     }
 
     fun readWorkingTree(project: Project, relativePath: String): String? {
-        val base = project.basePath ?: return null
-        val abs = Path.of(base, relativePath)
-        val vf = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(abs) ?: return null
-        return runCatching { String(vf.contentsToByteArray(), Charsets.UTF_8) }.getOrNull()
+        val root = projectRoot(project) ?: return null
+        val file = File(root, relativePath)
+        return if (file.exists()) file.readText(StandardCharsets.UTF_8) else null
     }
 
     /** Stages the given paths and creates a commit. Returns true on success. */
     fun commit(project: Project, relativePaths: List<String>, message: String): Boolean {
-        val repo = repo(project) ?: return false
-        val add = GitLineHandler(project, repo.root, GitCommand.ADD)
-        add.addParameters("--")
-        add.addParameters(*relativePaths.toTypedArray())
-        if (!Git.getInstance().runCommand(add).success()) return false
+        val root = projectRoot(project) ?: return false
+        if (relativePaths.isEmpty()) return false
 
-        val commit = GitLineHandler(project, repo.root, GitCommand.COMMIT)
-        commit.addParameters("-m", message)
-        return Git.getInstance().runCommand(commit).success()
+        val addCmd = mutableListOf("git", "add", "--")
+        addCmd.addAll(relativePaths)
+        if (run(root, addCmd).first != 0) return false
+
+        return run(root, listOf("git", "commit", "-m", message)).first == 0
     }
 
-    private fun repo(project: Project) =
-        GitUtil.getRepositoryManager(project).repositories.firstOrNull()
+    private fun projectRoot(project: Project): File? =
+        project.basePath?.let { File(it) }?.takeIf { it.isDirectory }
+
+    private fun run(workingDir: File, command: List<String>): Pair<Int, String> {
+        return try {
+            val process = ProcessBuilder(command)
+                .directory(workingDir)
+                .redirectErrorStream(true)
+                .start()
+            val output = process.inputStream.bufferedReader(StandardCharsets.UTF_8).readText()
+            val exit = process.waitFor()
+            exit to output
+        } catch (e: Exception) {
+            -1 to (e.message ?: "")
+        }
+    }
 }

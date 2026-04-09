@@ -1,8 +1,8 @@
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.25"
-    id("org.jetbrains.intellij.platform") version "2.1.0"
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
+    id("org.jetbrains.intellij.platform") version "2.14.0"
 }
 
 group = "dev.lucidforge"
@@ -20,8 +20,6 @@ dependencies {
 
     intellijPlatform {
         intellijIdeaCommunity("2024.2")
-        bundledPlugin("Git4Idea")
-        instrumentationTools()
     }
 }
 
@@ -32,8 +30,24 @@ intellijPlatform {
             untilBuild = "243.*"
         }
     }
+    pluginVerification {
+        ides {
+            recommended()
+        }
+    }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
+
+// We don't use Swing .form files or @NotNull runtime checks, so the bytecode
+// instrumentation step has nothing to do — and on this machine it fails trying
+// to locate JDK packages in the wrong path. Disable it.
+tasks.named("instrumentCode") { enabled = false }
+tasks.named("instrumentTestCode") { enabled = false }
+
+// We don't contribute any Settings pages, so the headless searchable-options
+// indexer has nothing to do. Skipping it speeds up the build and avoids a
+// flaky headless IDE boot.
+tasks.named("buildSearchableOptions") { enabled = false }
