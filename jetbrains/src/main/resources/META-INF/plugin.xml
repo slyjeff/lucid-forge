@@ -4,16 +4,18 @@
     <vendor>LucidForge</vendor>
     <description><![CDATA[
         Review AI-generated features produced by the LucidForge Claude Code skill.
-        Browse features in <code>.lucidforge/features/</code>, inspect per-step changes
-        with the IDE's native diff viewer, and approve to commit.
+        A navigation tool window in the left sidebar (next to Solution Explorer) lists
+        features, their steps, and changed files. Opening a file shows the IDE's
+        native diff viewer as a tab in the main editor area.
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="LucidForge"
-                    anchor="right"
-                    icon="AllIcons.Toolwindows.ToolWindowProject"
+        <toolWindow id="LucidForge Review"
+                    anchor="left"
+                    secondary="false"
+                    icon="/icons/lucidforge.svg"
                     factoryClass="dev.lucidforge.jetbrains.toolwindow.LucidForgeToolWindowFactory"/>
     </extensions>
 </idea-plugin>

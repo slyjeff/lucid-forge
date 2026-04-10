@@ -7,7 +7,7 @@ import com.intellij.ui.content.ContentFactory
 
 class LucidForgeToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val panel = LucidForgePanel(project)
+        val panel = LucidForgeNavigationPanel(project)
         val content = ContentFactory.getInstance().createContent(panel, "", false)
         toolWindow.contentManager.addContent(content)
     }

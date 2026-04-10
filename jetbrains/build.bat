@@ -6,7 +6,10 @@ REM Install in any JetBrains IDE via Settings > Plugins > gear icon > Install Pl
 setlocal
 cd /d "%~dp0"
 
-call .\gradlew.bat buildPlugin %*
+REM Always clean before building. Gradle's incremental compile keeps stale .class
+REM files in build/classes/ for source files that have been deleted or renamed,
+REM and they get packaged into the plugin jar — silently shipping old code.
+call .\gradlew.bat clean buildPlugin %*
 if errorlevel 1 (
     echo.
     echo BUILD FAILED

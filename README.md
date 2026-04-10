@@ -5,7 +5,9 @@ Structured AI code generation with step-by-step review. LucidForge breaks featur
 Two components work together:
 
 1. **Claude Code skills** orchestrate the development workflow and write structured artifact files
-2. **Desktop app** reads those artifacts and presents diffs, change maps, and insights for human review
+2. **A viewer** reads those artifacts and presents diffs, change maps, and insights for human review. LucidForge ships two viewers today:
+   - **Desktop app** (Wails, Go + React) — the reference implementation, with the full change-map and agent-management UI.
+   - **JetBrains plugin** (Kotlin) — a lightweight tool window that lives alongside your code in IntelliJ IDEA, PyCharm, WebStorm, Rider, and other IntelliJ-based IDEs. Opens diffs in the IDE's native diff viewer.
 
 ## Quick Start
 
@@ -78,7 +80,13 @@ You can edit files directly in the diff viewer — changes auto-save to disk. Ma
 
 The app auto-refreshes when artifact files change, so you can have it open while a feature is still executing.
 
-**Option B: Read the files directly**
+**Option B: JetBrains IDE plugin**
+
+If you work in IntelliJ IDEA, PyCharm, WebStorm, Rider, GoLand, or any other JetBrains IDE, install the LucidForge plugin to review features without leaving your editor. Download `lucidforge-jetbrains-<version>.zip` from the [Releases](../../releases) page (tags starting with `jetbrains-v`), then in your IDE: **Settings → Plugins → ⚙ → Install Plugin from Disk…**.
+
+The plugin adds a **LucidForge Review** tool window on the left sidebar where you pick a feature, pick a step, and click a file to open its diff in the IDE's native diff viewer. Files have a viewed checkbox (persisted to the step JSON), and Discovery / Plan / Issues / Insights buttons open the corresponding artifacts as editor tabs. See [jetbrains/README.md](jetbrains/README.md) for full details.
+
+**Option C: Read the files directly**
 
 Everything is in `.lucidforge/features/{feature-id}/` as human-readable JSON and markdown. You can inspect them with any text editor.
 
@@ -154,7 +162,7 @@ This copies the `.desktop` file and icon into `~/.local/share/` so LucidForge ap
 
 ### Build from Source
 
-Requires [Go](https://go.dev/dl/) and [Wails v2](https://wails.io/):
+**Desktop app** — requires [Go](https://go.dev/dl/) and [Wails v2](https://wails.io/):
 
 ```bash
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -163,6 +171,15 @@ wails build
 ```
 
 The built binary is in `app/build/bin/`.
+
+**JetBrains plugin** — requires JDK 17+; Gradle wrapper is included:
+
+```bash
+cd jetbrains
+./gradlew clean buildPlugin
+```
+
+The plugin zip is written to `jetbrains/build/distributions/lucidforge-jetbrains-<version>.zip`. See [jetbrains/README.md](jetbrains/README.md) for details.
 
 ## Skills Reference
 
@@ -218,9 +235,12 @@ app/                                # Wails desktop app (Go + React)
         lucidforge-cancel/SKILL.md
         lucidforge-change/SKILL.md
         lucidforge-commit/SKILL.md
+jetbrains/                          # JetBrains IDE plugin (Kotlin, IntelliJ Platform)
 docs/                               # design documentation
 install.sh                          # skill installer (for source installs)
 ```
+
+Each viewer (desktop app, JetBrains plugin) is released independently with its own tag prefix (`app-v*`, `jetbrains-v*`) and shares only the artifact schema — there's no shared runtime code between them.
 
 ## License
 

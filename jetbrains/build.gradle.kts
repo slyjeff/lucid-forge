@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.lucidforge"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
     mavenCentral()
@@ -27,7 +27,7 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "242"
-            untilBuild = "243.*"
+            untilBuild = "253.*"
         }
     }
     pluginVerification {

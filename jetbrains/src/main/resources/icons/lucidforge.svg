@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#CFCFCF" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Anvil top with rounded horn on the left -->
+  <path d="M3 5 Q1 5 1 6.2 Q1 7.4 3 7.4 L14 7.4 L14 5 Z"/>
+  <!-- Waist (narrowing from anvil top down to base) -->
+  <path d="M5 7.4 L4 10.5"/>
+  <path d="M11 7.4 L12 10.5"/>
+  <!-- Base (wider trapezoid) -->
+  <path d="M2.5 10.5 L13.5 10.5 L14 14 L2 14 Z"/>
+</svg>

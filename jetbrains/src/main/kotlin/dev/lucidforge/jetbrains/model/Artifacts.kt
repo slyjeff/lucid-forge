@@ -79,6 +79,22 @@ data class Connection(val from: String, val to: String, val relationship: String
 @Serializable
 data class Pattern(val name: String, val description: String = "")
 
+@Serializable
+data class Review(
+    val issues: List<Issue> = emptyList(),
+    val usage: PhaseUsage? = null,
+)
+
+@Serializable
+data class Issue(
+    val severity: String,
+    val step: Int,
+    val agent: String,
+    val file: String,
+    val description: String,
+    val fixed: Boolean = false,
+)
+
 const val STATUS_USER_REVIEW = "user-review"
 const val STATUS_APPROVED = "approved"
 const val STATUS_CANCELLED = "cancelled"
